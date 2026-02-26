@@ -1,0 +1,118 @@
+========================================================================
+ORGAN-AGE PLACEHOLDER REPLACEMENT MAP
+========================================================================
+
+SECTION 3.1 — Unimodal results:
+  RNA MAE: [placeholder 11.4] -> 9.617 yr
+  RNA MSE: [placeholder 198.3] -> 156.43
+  RNA r:   [placeholder 0.82]   -> -0.0009
+  X-ray MAE: [placeholder 10.8] -> 10.921 yr
+  X-ray MSE: [placeholder 176.2] -> 186.15
+  X-ray r:   [placeholder 0.84]   -> 0.7602
+  MRI MAE: [placeholder 13.9] -> 14.932 yr
+  MRI MSE: [placeholder 268.4] -> 312.21
+  MRI r: N/A (no v3 pred parquet)
+
+SECTION 3.2 — Alignment results:
+  Naive fusion (v3) MAE:       [placeholder 10.1] -> 10.883 yr
+  Naive fusion (v3) MSE:       [placeholder 158.2]-> 185.39
+  Aligned fusion (v3.5) MAE:   [placeholder 9.3]  -> 9.413 yr
+  Aligned fusion (v3.5) MSE:   [placeholder 138.0]-> 143.12
+  Aligned fusion (v3.5) r:     [placeholder 0.87] -> nan
+  Rel improvement (best uni -> aligned): [placeholder 14-19%] -> 2.1%
+  Rel improvement (v3 -> v3.5):          -> 13.5%
+  Residual SD v3.5 (calibrated):[placeholder 11.8] -> 17.178 yr
+  Residual SD v3 (from MSE):    [placeholder 13.4] -> 13.616 yr
+  Heteroscedasticity ratio v3.5:[placeholder 1.6x] -> 0.167x
+  Heteroscedasticity ratio v3:  [placeholder 2.1x] -> 0.392x
+  UMAP mixing score (aligned):  [placeholder >85%] -> 30.5%
+  UMAP mixing score (unaligned):[placeholder <50%] -> 42.4%
+  NOTE: UMAP score computed on prediction features; embedding-space score may differ
+
+SECTION 3.3 — Calibration:
+  Max |bias| across bins: [placeholder <0.5 yr] -> 27.035 yr
+  Bias by 10-yr bin (regression-to-mean effect):
+    20-30: +27.035 yr
+    30-40: +18.024 yr
+    40-50: +8.438 yr
+    50-60: -0.997 yr
+    60-70: -10.481 yr
+    70-80: -20.363 yr
+  CI half-width 30-40 bin: [placeholder +-8.2 yr] -> +-19.93 yr  (full width=39.8676 yr)
+  CI half-width 70-80 bin: [placeholder +-14.6 yr]-> +-19.99 yr  (full width=39.9788 yr)
+  Pred range coverage brain: -> 69.4%
+  Pred range coverage brain_cortex: -> 5.1%
+  Pred range coverage heart: -> 3.5%
+  Pred range coverage lung: -> 2.2%
+
+SECTION 3.4 — Per-organ:
+  brain: N=563  MAE=5.008  residual_SD=6.476  mean_delta=+0.0000
+  brain_cortex: N=270  MAE=7.952  residual_SD=10.137  mean_delta=+0.0000
+  heart: N=913  MAE=8.187  residual_SD=10.850  mean_delta=-0.0000
+  lung: N=188429  MAE=15.496  residual_SD=17.291  mean_delta=-6.9338
+  Brain residual SD:  [placeholder 7.87]  -> 6.476
+  Lung  residual SD:  [placeholder 12.84] -> 17.291
+  Lung  mean delta:   [placeholder +1.1]  -> -6.9338
+
+SECTION 3.6 — Hero subject (GTEX-1117F):
+  Chronological age: 64.5
+  adipose                  : pred=52.54  delta=-11.96  z=-0.928  CI=[24.5,64.99]
+  brain_cortex             : pred=58.82  delta=-5.68  z=-0.559  CI=[37.04,74.5]
+  heart                    : pred=54.22  delta=-10.28  z=-0.947  CI=[32.75,64.5]
+  kidney                   : pred=56.22  delta=-8.28  z=-0.802  CI=[34.5,71.7]
+  skeletal_muscle          : pred=50.4  delta=-14.1  z=-1.091  CI=[21.79,64.5]
+  skin                     : pred=52.78  delta=-11.72  z=-0.898  CI=[24.5,64.5]
+  whole_blood              : pred=53.02  delta=-11.48  z=-0.886  CI=[24.5,66.76]
+  Mean organ delta:    [placeholder -9.7]         -> -10.500
+  Skeletal muscle delta:[placeholder -14.2]       -> -14.1
+  Skeletal muscle z:   [placeholder -1.01]        -> -1.091
+  Skeletal muscle CI:  [placeholder [-22.1,-6.3]] -> [21.79,64.5]
+  Brain cortex delta:  [placeholder -5.8]         -> -5.68
+  Kidney delta:        [placeholder -10.5]        -> -8.28
+  Kidney CI:           [placeholder [-15.8,-5.2]] -> [34.5,71.7]
+  Largest |delta| organ: skeletal_muscle
+  Narrowest CI organ:    heart
+
+SECTION 3.8 — Gene attribution:
+  liver top-5 concentration: -> 28.4%
+  kidney top-5 concentration: -> 28.2%
+  brain_cortex top-5 concentration: -> 28.4%
+  heart top-5 concentration: -> 28.4%
+  Liver   top-5: [placeholder ~62%] -> 28.4%
+  Kidney  top-5: [placeholder ~58%] -> 28.2%
+  BrainCx top-5: [placeholder ~41%] -> 28.4%
+  Shared in all 4 organs: 5 genes = ['gene_202', 'gene_394', 'gene_891', 'gene_919', 'gene_931']
+  Organ-unique counts: {'liver': 6, 'kidney': 5, 'brain_cortex': 4, 'heart': 3}
+
+SECTION 3.8 — Latent attribution:
+  liver: top3=3.61%  top5=5.77%  top10=10.72%  dims=[211, 114, 204, 113, 25]
+  kidney: top3=4.23%  top5=6.61%  top10=11.73%  dims=[224, 211, 114, 215, 144]
+  brain_cortex: top3=4.13%  top5=6.43%  top10=11.69%  dims=[92, 25, 126, 132, 114]
+  Liver  top-3 IG: [placeholder 68%] -> 3.61%
+  Kidney top-3 IG: [placeholder 59%] -> 4.23%
+  BrainCx top-3:   [placeholder 47%] -> 4.13%
+  Liver top-5 cumulative:  [placeholder 82%] -> 5.77%
+  Liver top-10 cumulative: [placeholder 94%] -> 10.72%
+  Shared top-5 dims (all 10 organs): []
+  Shared top-5 dims (key 3 organs):  [114]
+  Organ-preferential dims: {'liver': [113, 204], 'kidney': [144, 215, 224], 'brain_cortex': [92, 126, 132]}
+
+========================================================================
+*** FLAGS — actual value differs from placeholder by >20% ***
+  *** Rel improvement (uni->v3.5): placeholder=0.165, actual=0.021  (-87%)
+  *** Residual SD v3.5: placeholder=11.8, actual=17.178  (+46%)
+  *** Hetero ratio v3.5: placeholder=1.6, actual=0.167  (-90%)
+  *** Hetero ratio v3: placeholder=2.1, actual=0.392  (-81%)
+  *** UMAP aligned: placeholder=85.0, actual=30.520  (-64%)
+  *** Max bias (expect <0.5): placeholder=0.5, actual=27.035  (+5307%)
+  *** Lung  residual SD: placeholder=12.84, actual=17.291  (+35%)
+  *** Lung  mean delta: placeholder=1.1, actual=-6.934  (-730%)
+  *** Liver gene conc: placeholder=62.0, actual=28.380  (-54%)
+  *** Kidney gene conc: placeholder=58.0, actual=28.170  (-51%)
+  *** BC gene conc: placeholder=41.0, actual=28.440  (-31%)
+  *** Liver IG top3: placeholder=68.0, actual=3.610  (-95%)
+  *** Kidney IG top3: placeholder=59.0, actual=4.230  (-93%)
+  *** BC IG top3: placeholder=47.0, actual=4.130  (-91%)
+
+  Total flags: 14
+========================================================================

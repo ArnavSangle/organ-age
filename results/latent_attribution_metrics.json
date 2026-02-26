@@ -1,0 +1,62 @@
+{
+  "top3_fraction_pct": {
+    "brain_cortex": 4.13,
+    "kidney": 4.23,
+    "liver": 3.61
+  },
+  "top5_fraction_pct": {
+    "brain_cortex": 6.43,
+    "kidney": 6.61,
+    "liver": 5.77
+  },
+  "top10_fraction_pct": {
+    "brain_cortex": 11.69,
+    "kidney": 11.73,
+    "liver": 10.72
+  },
+  "top5_indices": {
+    "brain_cortex": [
+      92,
+      25,
+      126,
+      132,
+      114
+    ],
+    "kidney": [
+      224,
+      211,
+      114,
+      215,
+      144
+    ],
+    "liver": [
+      211,
+      114,
+      204,
+      113,
+      25
+    ]
+  },
+  "shared_top5_dims_all_organs": [],
+  "shared_top5_dims_key3_organs": [
+    114
+  ],
+  "organ_preferential_dims": {
+    "liver": [
+      113,
+      204
+    ],
+    "kidney": [
+      144,
+      215,
+      224
+    ],
+    "brain_cortex": [
+      92,
+      126,
+      132
+    ]
+  },
+  "liver_cumulative_top5": 5.77,
+  "liver_cumulative_top10": 10.72
+}

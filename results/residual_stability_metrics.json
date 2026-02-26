@@ -1,0 +1,12 @@
+{
+  "v35_residual_SD": 17.1779,
+  "v3_residual_SD_from_MSE": 13.616,
+  "v35_hetero_ratio": 0.167,
+  "v3_hetero_ratio": 0.392,
+  "v35_young_decile_var": 30.531,
+  "v35_old_decile_var": 5.084,
+  "v3_young_decile_var": 139.554,
+  "v3_old_decile_var": 54.76,
+  "umap_mixing_score_aligned_pct": 30.52,
+  "umap_mixing_score_unaligned_pct": 42.37
+}
