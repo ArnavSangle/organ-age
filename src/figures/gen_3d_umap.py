@@ -17,7 +17,9 @@ import umap as umap_lib
 
 ROOT    = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUTDIR  = os.path.join(ROOT, "figures", "poster")
-os.makedirs(OUTDIR, exist_ok=True)
+HTMLDIR = os.path.join(OUTDIR, "html")
+os.makedirs(OUTDIR,  exist_ok=True)
+os.makedirs(HTMLDIR, exist_ok=True)
 
 # ── Dark-theme layout template ────────────────────────────────────────────────
 BG   = "#0f0f1a"
@@ -76,11 +78,11 @@ def base_layout(title, xr=None, yr=None, zr=None):
     )
 
 def save(fig, stem):
-    html = os.path.join(OUTDIR, f"{stem}.html")
-    png  = os.path.join(OUTDIR, f"{stem}.png")
+    html = os.path.join(HTMLDIR, f"{stem}.html")
+    png  = os.path.join(OUTDIR,  f"{stem}.png")
     fig.write_html(html)
     fig.write_image(png, scale=1)
-    print(f"  Saved {stem}.html + .png")
+    print(f"  Saved {stem}.png  |  html/{stem}.html")
 
 # ── Load parquets ─────────────────────────────────────────────────────────────
 print("Loading parquets …")

@@ -16,9 +16,11 @@ from scipy.ndimage import gaussian_filter
 
 warnings.filterwarnings("ignore")
 
-ROOT   = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-OUTDIR = os.path.join(ROOT, "figures", "poster")
-os.makedirs(OUTDIR, exist_ok=True)
+ROOT    = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+OUTDIR  = os.path.join(ROOT, "figures", "poster")
+HTMLDIR = os.path.join(OUTDIR, "html")
+os.makedirs(OUTDIR,  exist_ok=True)
+os.makedirs(HTMLDIR, exist_ok=True)
 
 BG   = "#0f0f1a"
 FONT = "Georgia, 'Times New Roman', serif"
@@ -40,11 +42,11 @@ def _title_font(size=28):
     return dict(family=FONT, color="rgba(160,160,220,0.8)", size=size)
 
 def save(fig, stem):
-    html = os.path.join(OUTDIR, f"{stem}.html")
-    png  = os.path.join(OUTDIR, f"{stem}.png")
+    html = os.path.join(HTMLDIR, f"{stem}.html")
+    png  = os.path.join(OUTDIR,  f"{stem}.png")
     fig.write_html(html)
     fig.write_image(png, scale=1)
-    print(f"  Saved {stem}.html + .png")
+    print(f"  Saved {stem}.png  |  html/{stem}.html")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # FIGURE E — Aging Manifold Terrain
