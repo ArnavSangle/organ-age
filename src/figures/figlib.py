@@ -432,23 +432,25 @@ def fig_conceptual_overview(out_path: str) -> None:
         )
 
     # ── Geometry (horizontal, evenly spaced) ──────────────────────────────────
-    # GAP = 0.075 between every pair of adjacent box edges throughout
-    # Box widths: BW_s=0.14, BW_s=0.14, ALN_W=0.13, FUS_W=0.13, OUT≈0.12
-    # Centres computed so right_edge_i + GAP = left_edge_{i+1}
-    GAP   = 0.075
+    # GAP = 0.095 between every pair of adjacent box edges throughout.
+    # Narrower boxes (BW_s=0.12, tall boxes=0.11) so text fills the box more.
+    # All five columns use the same GAP so spacing is visually equal.
+    GAP   = 0.095
 
-    BW_s  = 0.14   # small box width  (input / encoder)
+    BW_s  = 0.12   # small box width  (input / encoder)
     BH_s  = 0.15   # small box height
-    ALN_W = 0.13   # alignment box width
+    ALN_W = 0.11   # alignment box width
     ALN_H = 0.70   # alignment box height (spans all three rows)
-    FUS_W = 0.13   # fusion box width
-    FUS_H = 0.56   # fusion box height
+    FUS_W = 0.11   # fusion box width
+    FUS_H = 0.58   # fusion box height
+    OUT_W = 0.11   # output box width
+    OUT_H = 0.42   # output box height
 
-    x_inp = 0.02 + BW_s / 2                               # ≈ 0.090
-    x_enc = x_inp + BW_s / 2 + GAP + BW_s / 2            # ≈ 0.305
-    x_aln = x_enc + BW_s / 2 + GAP + ALN_W / 2           # ≈ 0.515
-    x_fus = x_aln + ALN_W / 2 + GAP + FUS_W / 2          # ≈ 0.720
-    x_out = x_fus + FUS_W / 2 + GAP + 0.06               # ≈ 0.920 (text centre)
+    x_inp = 0.02 + BW_s / 2                                # ≈ 0.080
+    x_enc = x_inp + BW_s / 2 + GAP + BW_s / 2             # ≈ 0.295
+    x_aln = x_enc + BW_s / 2 + GAP + ALN_W / 2            # ≈ 0.505
+    x_fus = x_aln + ALN_W / 2 + GAP + FUS_W / 2           # ≈ 0.710
+    x_out = x_fus + FUS_W / 2 + GAP + OUT_W / 2           # ≈ 0.915
 
     # Three modality rows
     y_rna  = 0.77
@@ -456,33 +458,31 @@ def fig_conceptual_overview(out_path: str) -> None:
     y_mri  = 0.23
 
     # ── Input data boxes (left column, stacked) ───────────────────────────────
-    box(x_inp, y_rna,  BW_s, BH_s, "GTEx  RNA-seq\n7,378 samples",      "#EEF2FF")
-    box(x_inp, y_xray, BW_s, BH_s, "CheXpert  X-ray\n187,825 samples",  "#FFF7ED")
-    box(x_inp, y_mri,  BW_s, BH_s, "IXI  Brain MRI\n563 samples",       "#F0FDFA")
+    box(x_inp, y_rna,  BW_s, BH_s, "GTEx  RNA-seq\n7,378 samples",      "#EEF2FF", fontsize=15)
+    box(x_inp, y_xray, BW_s, BH_s, "CheXpert  X-ray\n187,825 samples",  "#FFF7ED", fontsize=15)
+    box(x_inp, y_mri,  BW_s, BH_s, "IXI  Brain MRI\n563 samples",       "#F0FDFA", fontsize=15)
 
     # ── Encoder boxes (second column, stacked) ────────────────────────────────
-    box(x_enc, y_rna,  BW_s, BH_s, "MLP\nEncoder",    "#F1F5F9")
-    box(x_enc, y_xray, BW_s, BH_s, "ResNet\nEncoder", "#F1F5F9")
-    box(x_enc, y_mri,  BW_s, BH_s, "ViT\nEncoder",    "#F1F5F9")
+    box(x_enc, y_rna,  BW_s, BH_s, "MLP\nEncoder",    "#F1F5F9", fontsize=15)
+    box(x_enc, y_xray, BW_s, BH_s, "ResNet\nEncoder", "#F1F5F9", fontsize=15)
+    box(x_enc, y_mri,  BW_s, BH_s, "ViT\nEncoder",    "#F1F5F9", fontsize=15)
 
     # ── Contrastive alignment (tall, spans all rows) ──────────────────────────
     box(x_aln, y_xray, ALN_W, ALN_H,
         "Contrastive\nAlignment\n(InfoNCE)",
-        "#F0FDF4")
+        "#F0FDF4", fontsize=15)
 
     # ── Fusion transformer (tall) ─────────────────────────────────────────────
     box(x_fus, y_xray, FUS_W, FUS_H,
         "Fusion\nTransformer\n+\nCross-Modal\nAttention",
-        "#FEE2E2")
+        "#FEE2E2", fontsize=15)
 
-    # ── Output annotation (right side) ────────────────────────────────────────
-    ax.text(x_out, y_xray,
-            "Organ-Age\nPrediction\n"
-            "$\\mu \\pm \\sigma$\n"
-            "$\\Delta = \\hat{y} - y_{\\mathrm{chrono}}$",
-            ha="center", va="center", fontsize=14,
-            color=slate, style="italic", multialignment="center",
-            linespacing=1.6)
+    # ── Output box (boxed, matching style of all other nodes) ─────────────────
+    box(x_out, y_xray, OUT_W, OUT_H,
+        "Organ-Age\nPrediction\n"
+        "$\\mu \\pm \\sigma$\n"
+        "$\\Delta = \\hat{y} - y_{\\mathrm{chrono}}$",
+        "#FEF9C3", fontsize=14)   # soft yellow to visually distinguish output
 
     # ── Arrows: input → encoder (horizontal per row, equal gap) ───────────────
     for yr in (y_rna, y_xray, y_mri):
@@ -496,7 +496,7 @@ def fig_conceptual_overview(out_path: str) -> None:
     arrow(x_aln + ALN_W / 2, y_xray, x_fus - FUS_W / 2, y_xray)
 
     # ── Arrow: fusion → output ────────────────────────────────────────────────
-    arrow(x_fus + FUS_W / 2, y_xray, x_out - 0.06, y_xray)
+    arrow(x_fus + FUS_W / 2, y_xray, x_out - OUT_W / 2, y_xray)
 
     _savefig(out_path, dpi=100)
 
