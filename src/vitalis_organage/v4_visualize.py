@@ -87,17 +87,17 @@ def radar_plot(organs, values, outpath):
     values += values[:1]  # close loop
     angles += angles[:1]
 
-    fig = plt.figure(figsize=(8, 8))
+    fig = plt.figure(figsize=(7, 7))
     ax = plt.subplot(111, polar=True)
 
-    ax.plot(angles, values, linewidth=2)
-    ax.fill(angles, values, alpha=0.25)
+    ax.plot(angles, values, linewidth=2, color="#0F766E")
+    ax.fill(angles, values, alpha=0.20, color="#0F766E")
 
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(organs, fontsize=10)
+    ax.set_xticklabels(organs, fontsize=9)
     ax.set_yticklabels([])
 
-    ax.set_title("Organ Z-Scores (Calibrated)", fontsize=16, pad=20)
+    ax.set_title("Organ Z-Score Profile (Calibrated)", fontsize=13, pad=18)
     plt.savefig(outpath, dpi=300, bbox_inches='tight')
     plt.close()
 
@@ -151,7 +151,7 @@ def ci_plot(chrono_age, organs, cal_ages, ci_low, ci_high, outpath):
     outpath : Path
         Destination path for the saved PNG figure.
     """
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(8, 5))
 
     y = np.arange(len(organs))
 
@@ -160,24 +160,24 @@ def ci_plot(chrono_age, organs, cal_ages, ci_low, ci_high, outpath):
         y,
         xerr=[cal_ages - ci_low, ci_high - cal_ages],
         fmt="o",
-        ecolor="gray",
+        ecolor="#94A3B8",
         elinewidth=2,
         capsize=4,
         markersize=6,
-        color="blue",
-        label="Calibrated Organ Age ± 95% CI",
+        color="#0F766E",
+        label="Calibrated organ age ± 95% CI",
     )
 
-    ax.axvline(chrono_age, color="red", linestyle="--", linewidth=2, label="Chronological Age")
+    ax.axvline(chrono_age, color="#B45309", linestyle="--", linewidth=2, label="Chronological age")
 
     ax.set_yticks(y)
-    ax.set_yticklabels(organs)
-    ax.set_xlabel("Age")
-    ax.set_title("Organ Ages with Confidence Intervals", fontsize=16)
-    ax.legend()
+    ax.set_yticklabels(organs, fontsize=10)
+    ax.set_xlabel("Age (years)", fontsize=11)
+    ax.set_title("Calibrated Organ Ages with 95% CI", fontsize=13)
+    ax.legend(fontsize=9)
 
     plt.tight_layout()
-    plt.savefig(outpath, dpi=300)
+    plt.savefig(outpath, dpi=300, bbox_inches='tight')
     plt.close()
 
 

@@ -390,65 +390,104 @@ def write_metrics_table(df: pd.DataFrame, out_tex_path: str) -> pd.DataFrame:
 def fig_conceptual_overview(out_path: str) -> None:
     """Render a schematic overview of the multimodal organ-age pipeline.
 
-    Draws a horizontally flowing diagram (using matplotlib patches and
-    annotations rather than an external vector asset) showing:
+    Draws a three-stream top-down diagram showing:
 
-    * Two input modality blocks (Transcriptomics, Radiology).
-    * Modality-specific encoders.
-    * Contrastive alignment stage.
-    * Fusion Transformer + regression head.
-    * Output annotation (predicted organ age / age acceleration).
+    * Three input modality blocks (GTEx RNA-seq, CheXpert X-ray, IXI MRI) as
+      separate columns.
+    * Per-modality encoder boxes (MLP / ResNet / ViT) in each column.
+    * Converging arrows leading into a wide contrastive alignment block.
+    * Fusion Transformer box below alignment.
+    * Output annotation (organ-age prediction μ ± σ and gap Δ).
 
     Parameters
     ----------
     out_path : str
         Destination PNG path.
     """
-    import matplotlib.patches as patches
+    import matplotlib.patches as mpatches
 
-    fig, ax = plt.subplots(figsize=(11, 4.5))
+    slate = OA_COLORS["slate"]
+
+    fig, ax = plt.subplots(figsize=(12, 9))
     ax.set_axis_off()
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
 
-    def box(x, y, w, h, text, fc, ec=None):
-        """Draw a rounded rectangle with centred bold label text."""
-        ec = ec or OA_COLORS["slate"]
-        r = patches.FancyBboxPatch(
-            (x, y), w, h,
-            boxstyle="round,pad=0.02,rounding_size=0.02",
-            linewidth=1.4, edgecolor=ec, facecolor=fc
+    def box(cx, cy, w, h, text, fc, fontsize=10):
+        """Draw a rounded rect centred at (cx, cy) with bold label."""
+        r = mpatches.FancyBboxPatch(
+            (cx - w / 2, cy - h / 2), w, h,
+            boxstyle="round,pad=0.015,rounding_size=0.02",
+            linewidth=1.5, edgecolor=slate, facecolor=fc, zorder=3,
         )
         ax.add_patch(r)
-        ax.text(x + w / 2, y + h / 2, text,
-                ha="center", va="center", fontsize=11, color=OA_COLORS["slate"],
-                fontweight="bold")
-
-    # Input boxes
-    box(0.03, 0.60, 0.22, 0.28, "Transcriptomics\n(GTEx RNA-seq)",       "#EEF2FF")
-    box(0.03, 0.18, 0.22, 0.28, "Radiology\n(CheXpert X-ray,\nIXI MRI)", "#E6FFFB")
-
-    # Pipeline boxes
-    box(0.30, 0.39, 0.22, 0.28, "Modality-specific\nEncoders",            "#FFFBEB")
-    box(0.57, 0.39, 0.18, 0.28, "Contrastive\nAlignment",                 "#F0FDF4")
-    box(0.78, 0.39, 0.19, 0.28, "Fusion\nTransformer\n+ Regression",      "#FEE2E2")
+        ax.text(cx, cy, text,
+                ha="center", va="center", fontsize=fontsize,
+                color=slate, fontweight="bold",
+                multialignment="center", linespacing=1.5, zorder=4)
 
     def arrow(x1, y1, x2, y2):
-        """Draw a single-headed arrow from (x1, y1) to (x2, y2) in axes coords."""
-        ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
-                    arrowprops=dict(arrowstyle="->", lw=1.7, color=OA_COLORS["slate"]))
+        """Draw a filled-head arrow from (x1,y1) to (x2,y2) in axes coords."""
+        ax.annotate(
+            "", xy=(x2, y2), xytext=(x1, y1),
+            arrowprops=dict(arrowstyle="-|>", lw=1.5,
+                            color=slate, mutation_scale=14),
+            zorder=2,
+        )
 
-    arrow(0.25, 0.74, 0.30, 0.53)
-    arrow(0.25, 0.32, 0.30, 0.53)
-    arrow(0.52, 0.53, 0.57, 0.53)
-    arrow(0.75, 0.53, 0.78, 0.53)
+    # ── Geometry ──────────────────────────────────────────────────────────────
+    cx_rna, cx_xray, cx_mri = 0.18, 0.50, 0.82   # column centres
+    BW = 0.27    # narrow box width (inputs / encoders)
+    BH = 0.11    # box height (all rows)
+    y_inp = 0.88
+    y_enc = 0.68
+    y_aln = 0.47
+    y_fus = 0.26
 
-    ax.text(0.875, 0.20,
-            "Predicted organ age\nvs chronological age\n(age acceleration Δ)",
-            ha="center", va="center", fontsize=10, color=OA_COLORS["slate"])
-    arrow(0.875, 0.39, 0.875, 0.27)
+    # ── Row 1: input data boxes ───────────────────────────────────────────────
+    box(cx_rna,  y_inp, BW, BH, "GTEx  RNA-seq\n7,378 samples",       "#EEF2FF", fontsize=13)
+    box(cx_xray, y_inp, BW, BH, "CheXpert  X-ray\n187,825 samples",   "#FFF7ED", fontsize=13)
+    box(cx_mri,  y_inp, BW, BH, "IXI  Brain MRI\n563 samples",        "#F0FDFA", fontsize=13)
 
-    fig.tight_layout()
+    # ── Row 2: modality-specific encoders ─────────────────────────────────────
+    box(cx_rna,  y_enc, BW, BH, "MLP\nEncoder",     "#F1F5F9", fontsize=13)
+    box(cx_xray, y_enc, BW, BH, "ResNet\nEncoder",  "#F1F5F9", fontsize=13)
+    box(cx_mri,  y_enc, BW, BH, "ViT\nEncoder",     "#F1F5F9", fontsize=13)
+
+    # ── Row 3: contrastive alignment (wide) ───────────────────────────────────
+    box(0.50, y_aln, 0.84, BH,
+        "Contrastive Alignment   (InfoNCE loss)",
+        "#F0FDF4", fontsize=13)
+
+    # ── Row 4: fusion transformer ─────────────────────────────────────────────
+    box(0.50, y_fus, 0.62, BH,
+        "Fusion Transformer  +  Cross-Modal Attention",
+        "#FEE2E2", fontsize=13)
+
+    # ── Output text ───────────────────────────────────────────────────────────
+    ax.text(0.50, 0.09,
+            "Organ-Age Prediction:   $\\mu \\pm \\sigma$"
+            "   \u2192   $\\Delta = \\hat{y} - $ chronological age",
+            ha="center", va="center", fontsize=14,
+            color=slate, style="italic")
+
+    # ── Arrows: input → encoder (straight down) ───────────────────────────────
+    for cx in (cx_rna, cx_xray, cx_mri):
+        arrow(cx, y_inp - BH / 2, cx, y_enc + BH / 2)
+
+    # ── Arrows: encoder → alignment (RNA and MRI converge diagonally) ─────────
+    aln_top = y_aln + BH / 2
+    enc_bot = y_enc - BH / 2
+    arrow(cx_rna,  enc_bot, 0.26, aln_top)   # RNA  → left-centre of alignment
+    arrow(cx_xray, enc_bot, cx_xray, aln_top) # X-ray → centre (straight)
+    arrow(cx_mri,  enc_bot, 0.74, aln_top)   # MRI  → right-centre of alignment
+
+    # ── Arrow: alignment → fusion ─────────────────────────────────────────────
+    arrow(0.50, y_aln - BH / 2, 0.50, y_fus + BH / 2)
+
+    # ── Arrow: fusion → output ────────────────────────────────────────────────
+    arrow(0.50, y_fus - BH / 2, 0.50, 0.135)
+
     _savefig(out_path)
 
 

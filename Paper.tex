@@ -16,16 +16,16 @@
 % ============================================================
 \usepackage[dvipsnames]{xcolor}
 
-% ---- Stroke / accent colors (lighter blue + rose per your request) ----
+% ---- Stroke / accent colors ----
 \definecolor{OAslate}{HTML}{334155} % deep slate (strokes/text)
 \definecolor{OAamber}{HTML}{B45309} % warm amber
 \definecolor{OAteal}{HTML}{0F766E}  % teal
 
-% Make these lighter than before:
-\definecolor{OAblue}{HTML}{3B82F6}  % lighter blue (was darker)
-\definecolor{OArose}{HTML}{F43F5E}  % lighter rose (was darker)
+% Lighter blue/rose
+\definecolor{OAblue}{HTML}{3B82F6}
+\definecolor{OArose}{HTML}{F43F5E}
 
-% Use a slightly stronger blue for links so they stay readable:
+% Stronger blue for links
 \definecolor{OAblueLink}{HTML}{2563EB}
 
 % ---- Fill colors (very light) ----
@@ -36,8 +36,7 @@
 \definecolor{OAfillBlue}{HTML}{EFF6FF}
 \definecolor{OAfillSlate}{HTML}{F1F5F9}
 
-% ---- Backward-compatible aliases (so your old figures don't break) ----
-% If your figure uses fill=OAgray / OAcream / OAmint / OAblue / OArose, this keeps it compiling.
+% ---- Backward-compatible aliases ----
 \colorlet{OAgray}{OAfillSlate}
 \colorlet{OAcream}{OAfillAmber}
 \colorlet{OAmint}{OAfillSage}
@@ -47,7 +46,7 @@
 % ============================================================
 % Typography & spacing
 % ============================================================
-\usepackage{lmodern}           % better Latin Modern fonts (Type 1, vector)
+\usepackage{lmodern}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
@@ -101,12 +100,7 @@
 \setkeys{Gin}{width=\columnwidth, keepaspectratio}
 
 \graphicspath{
-  {figures/organ_age/}
-  {figures/organ_age/v4_panels/}
-  {figures/vitalis_v4/}
-  {figures/vitalis_v4/GTEX-1117F/}
-  {figures/v4_5/}
-  {figures/v4_5/top_genes/}
+  {figures/paper/}
 }
 
 \setcounter{topnumber}{2}
@@ -134,18 +128,15 @@
 % - Use OAstep / OAin instead.
 \tikzset{%
   OAarrow/.style={-{Latex[length=2.2mm]}, line width=0.55pt, draw=OAslate},%
-  % INPUT nodes (small boxes on top)
   OAin/.style={%
     draw=OAslate!70, rounded corners=2.2mm, line width=0.40pt, align=center,
     inner xsep=6pt, inner ysep=4.5pt, minimum width=0.27\columnwidth,
     fill=OAfillSlate
   },%
-  % PIPELINE step nodes
   OAstep/.style={%
     draw=OAslate, rounded corners=2.2mm, line width=0.45pt, align=center,
     inner xsep=6.5pt, inner ysep=5.5pt, minimum width=0.86\columnwidth
   },%
-  % Stage fills (apply as: [OAstep, stageBlue], etc.)
   stageRose/.style={fill=OAfillRose},%
   stageAmber/.style={fill=OAfillAmber},%
   stageSage/.style={fill=OAfillSage},%
@@ -187,27 +178,28 @@
 \noindent\rule{\textwidth}{0.4pt}
 \vspace{0em}
 
-
-
-
 \begin{abstract}
-Biological aging does not proceed uniformly across the body---different organs accumulate 
-molecular, structural, and physiological damage at different rates. Yet most biological age 
-predictors rely on a single data type, usually molecular measurements, and consequently 
-cannot distinguish organ-specific aging trajectories that span both gene expression and 
-medical imaging. Here I present Organ-Age, a framework that estimates organ-level biological 
-age by fusing transcriptomic and radiological data. Working with a combined dataset of over 
-190,000 samples, I first align modality-specific embeddings into a common latent space via 
-contrastive learning, then merge them through a transformer-based fusion module to produce 
-organ-resolved age predictions. The final model achieves a mean absolute error of 
-$\sim$9.3 years and tracks chronological age closely across the adult lifespan. Residual 
-deviations between predicted organ age and chronological age---organ-age deltas---expose 
-patterns of accelerated and decelerated aging that are consistent with known tissue-level 
-biology, indicating that the fused representation encodes variation beyond chronological 
-time. These findings show that aligning and merging heterogeneous aging signals is a 
-viable route toward organ-resolved biological age assessment.
-\end{abstract}
+Biological aging does not proceed uniformly across the body. Different organs accumulate
+molecular, structural, and physiological damage at different rates, yet most biological age
+predictors rely on a single data type and consequently collapse aging into a single,
+organism-wide estimate. This compression limits clinical interpretability and obscures organ-level
+trajectories that span both gene regulation and tissue morphology.
 
+Here I present Organ-Age, a framework that estimates organ-resolved biological age by fusing
+transcriptomic and radiological signals. Using bulk RNA-seq from GTEx, chest radiographs from
+CheXpert, and structural brain MRI from IXI, the model first encodes each modality into a
+fixed-length embedding, aligns embeddings into a shared latent space via an InfoNCE-style
+contrastive objective, and then merges them through a transformer-based fusion module to
+produce organ-level age predictions with uncertainty. On a combined cohort of over 190{,}000
+samples, the aligned multimodal model achieves a mean absolute error of $\sim$9.3 years and
+tracks chronological age closely across the adult lifespan.
+
+Residual deviations between predicted organ age and chronological age---organ-age deltas---expose
+structured acceleration and deceleration patterns that differ by organ and are consistent with
+known tissue-level biology. These findings suggest that biological age is better modeled as a
+multi-signal, organ-resolved construct than as a single number and that alignment plus attention-based
+fusion is a viable route toward interpretable organ-specific aging assessment.
+\end{abstract}
 
 \vspace{1em}
 \noindent\rule{\textwidth}{0.4pt}
@@ -216,65 +208,61 @@ viable route toward organ-resolved biological age assessment.
 ]
 \makeatother
 
-
-
-
+% ============================================================
+% INTRODUCTION
+% ============================================================
 \section{Introduction}
 
 Biological aging involves progressive functional decline at the molecular, cellular, and organ
-levels. Chronological age is a crude proxy for this process---individuals of the same calendar
-age vary widely in their healthspan, disease burden, and rate of physiological deterioration.
-Recognizing this, a growing body of work has sought to estimate biological age: a quantity
-that reflects actual physiological state rather than time since birth
-\cite{horvath2013,hannum2013}.
+levels. Chronological age is a crude proxy for this process: individuals of the same calendar
+age vary widely in healthspan, disease burden, and rate of physiological deterioration.
+Recognizing this, a growing body of work has sought to estimate biological age, a quantity
+that reflects physiological state rather than time since birth \cite{horvath2013,hannum2013}.
 
-The most established biological age predictors are epigenetic clocks, which use DNA
-methylation patterns to estimate a single, organism-wide age value. These clocks correlate
-well with mortality, chronic disease risk, and functional decline \cite{levine2018}, and they
-have been instrumental in showing that aging is, in principle, quantifiable from molecular
-data. However, because they collapse the aging signal into one number, they say little about
-how individual tissues or organs age relative to one another---a distinction that matters
-clinically, since age-related pathology is often organ-specific.
+The most established biological age predictors are epigenetic clocks, which use DNA methylation
+patterns to estimate a single, organism-wide age value. These clocks correlate with mortality,
+chronic disease risk, and functional decline \cite{levine2018}. They have been instrumental in
+showing that aging is, in principle, quantifiable from molecular data. However, because they
+collapse aging into one number, they say little about how individual tissues or organs age
+relative to one another---a distinction that matters clinically, since age-related pathology
+is often organ-specific.
 
 A growing literature confirms that aging is not synchronous across the body. Lungs in chronic
-smokers and livers in heavy drinkers deteriorate well ahead of other organs in the same
-individual. More broadly, tissue-resolved and single-cell profiling studies have documented
-wide variation in the pace and character of age-associated molecular change across organ
-systems \cite{zakarpolyak2023}. Despite this, few computational approaches attempt to
-estimate organ-specific biological age directly. Most existing models work from a single data
-type---gene expression, imaging, or methylation---and therefore capture only part of the
-picture.
+smokers and livers in heavy drinkers can deteriorate well ahead of other organs in the same
+individual. More broadly, tissue-resolved profiling studies document wide variation in the pace
+and character of age-associated molecular change across organ systems \cite{zakarpolyak2023}.
+Despite this, few computational approaches attempt to estimate organ-specific biological age
+directly. Most existing models work from a single data type---gene expression, imaging, or
+methylation---and therefore capture only part of the picture.
 
-On the imaging side, deep learning models trained on chest radiographs and brain MRI have
-shown that macrostructural aging features---changes in skeletal morphology, soft-tissue
-composition, and brain volume---can be read off medical images with reasonable accuracy
-\cite{cole2017,rajpurkar2018chexnet}. These structural cues are largely invisible to
-molecular clocks, and vice versa; yet imaging-based age predictors are typically developed in
-isolation, with no connection to the underlying molecular state of the tissue.
+On the imaging side, deep learning models trained on chest radiographs and brain MRI show that
+macrostructural aging features---changes in skeletal morphology, soft-tissue composition, and
+brain volume---can be inferred from medical images with reasonable accuracy
+\cite{cole2017,rajpurkar2018chexnet}. These structural cues are largely invisible to molecular
+clocks, and vice versa. Yet imaging-based age predictors are typically developed in isolation,
+with no explicit connection to underlying molecular state.
 
 Multimodal learning offers a natural way to bridge this gap. Contrastive objectives such as
-InfoNCE and its descendants can pull embeddings from different data types into a common
-representation space, preserving the structure within each modality while encouraging
-cross-modal agreement \cite{oord2018cpc,chen2020simclr,radford2021clip}.
-Transformer-based architectures add the ability to model interactions across modalities
-through attention \cite{vaswani2017}, and recent systems like Perceiver IO and FLAVA have
-demonstrated that diverse inputs can be merged through a shared latent bottleneck without
-requiring pixel-level or token-level alignment
-\cite{jaegle2021perceiver,singh2021flava}. Separately, probabilistic regression methods have
-emphasized the value of predicting uncertainty alongside point estimates, which is especially
-relevant for targets like biological age that are inherently noisy and never directly observed
-\cite{kendall2017}. Taken together, these lines of work suggest that biological age may be
-better understood as a composite quantity---shaped by the interplay of molecular and
-structural processes---than as something derivable from any single measurement.
+InfoNCE can pull embeddings from different data types into a common representation space,
+preserving structure within each modality while encouraging cross-modal agreement
+\cite{oord2018cpc,chen2020simclr,radford2021clip}. Transformer-based architectures add the
+ability to model interactions across modalities through attention \cite{vaswani2017}, and recent
+systems like Perceiver IO and FLAVA demonstrate that diverse inputs can be merged through a
+shared latent bottleneck without requiring pixel-level or token-level alignment
+\cite{jaegle2021perceiver,singh2021flava}. Separately, probabilistic regression emphasizes the
+value of predicting uncertainty alongside point estimates, which is relevant for targets like
+biological age that are inherently noisy and never directly observed \cite{kendall2017}. Taken
+together, these lines of work suggest that biological age may be better understood as a composite
+quantity shaped by the interplay of molecular and structural processes than as something derivable
+from any single measurement.
 
-With this motivation, I present Organ-Age, a framework for estimating organ-level biological
-age by jointly modeling transcriptomic and radiological signals. Separate encoders produce
-embeddings from RNA-seq data, chest radiographs, and structural MRI scans; these embeddings
-are pulled into a shared latent space through contrastive alignment and then merged by a
-transformer-based fusion module to yield organ-specific age predictions. A central focus of
-the work is the interpretation of residual deviations between predicted organ age and
-chronological age, which can flag accelerated or decelerated aging in particular tissues.
-
+With this motivation, I present Organ-Age, a framework for estimating organ-level biological age
+by jointly modeling transcriptomic and radiological signals. Separate encoders produce embeddings
+from RNA-seq data, chest radiographs, and structural MRI scans; these embeddings are pulled into
+a shared latent space through contrastive alignment and then merged by a transformer-based fusion
+module to yield organ-specific age predictions. A central output of the work is the residual
+deviation between predicted organ age and chronological age, which can flag accelerated or
+decelerated aging in specific tissues.
 
 \begin{figure}[t]
 \centering
@@ -316,23 +304,22 @@ chronological age, which can flag accelerated or decelerated aging in particular
 \draw[OAarrow] (pred) -- (gap);
 
 \end{tikzpicture}
-\caption{Conceptual overview of Organ-Age: modality-specific encoders, alignment, fusion, 
+\caption{Conceptual overview of Organ-Age: modality-specific encoders, alignment, fusion,
 and organ-age prediction with uncertainty and age-gap outputs.}
 \label{fig:conceptual_overview}
 \end{figure}
 
-
 Figure~\ref{fig:conceptual_overview} outlines the Organ-Age pipeline. The core idea is that
 organ-specific biological age reflects the joint contribution of molecular and structural
-signals, and that aligning representations from these domains can surface aging patterns
+signals and that aligning representations from these domains can surface aging patterns
 invisible to any single modality. Beyond population-level evaluation, Organ-Age also supports
 per-subject interpretation through individualized organ-age panels (v4) and gene-level
-attribution summaries (v4.5), which trace organ-age deviations back to candidate
-transcriptomic drivers.
+attribution summaries (v4.5), which trace organ-age deviations back to candidate transcriptomic
+drivers.
 
-
-
-
+% ============================================================
+% METHODS
+% ============================================================
 \section{Methods}
 
 Three publicly available datasets supply the molecular and structural aging signals used in
@@ -360,11 +347,11 @@ scans, convolutional networks---adapted to 2-D and 3-D inputs, respectively---se
 same purpose. All three encoders output embeddings of the same dimensionality so that they
 can be compared and merged downstream.
 
-To bring these modality-specific embeddings into a common space, I appended learned
-projection heads to each encoder and trained them with an InfoNCE-style contrastive objective
-\cite{oord2018cpc}, borrowing design choices from SimCLR and CLIP
-\cite{chen2020simclr,radford2021clip}. Pairwise similarity is measured by cosine similarity,
-which depends on the angle between vectors and is insensitive to their magnitude:
+To bring modality-specific embeddings into a common space, I appended learned projection heads
+to each encoder and trained them with an InfoNCE-style contrastive objective \cite{oord2018cpc},
+borrowing design choices from SimCLR and CLIP \cite{chen2020simclr,radford2021clip}. Pairwise
+similarity is measured by cosine similarity, which depends on the angle between vectors and is
+insensitive to their magnitude:
 \begin{equation}
 \mathrm{sim}(u, v) = \frac{u^\top v}{\|u\| \|v\|}
 \label{eq:cosine}
@@ -374,14 +361,15 @@ Alignment was optimized by minimizing the contrastive loss
 \begin{equation}
 \mathcal{L}_{\text{InfoNCE}}
 =
-- \log 
+- \log
 \frac{\exp(\mathrm{sim}(u,u') / \tau)}
 {\sum_{j} \exp(\mathrm{sim}(u,u_j)/\tau)}
 \label{eq:infonce}
-\end{equation} 
-which pushes embeddings from the same biological context closer together while
-pulling apart those from unrelated samples.
-
+\end{equation}
+which pulls embeddings from the same biological context closer together while pushing apart
+those from unrelated samples. The purpose is not to erase modality-specific information but to
+reduce modality identity as the dominant axis of variation, so that age-related geometry can be
+fused reliably.
 
 \begin{figure}[t!]
 \centering
@@ -428,14 +416,13 @@ pulling apart those from unrelated samples.
   fill=OAfillSlate,
   align=left,
   inner sep=5pt,
-  text width=1.55cm,          % skinny
-  minimum height=3.05cm,      % tall
-  shape border rotate=90,     % rotate border only (NOT the text)
-  below=0.95cm of rna         % lower under RNA
+  text width=1.55cm,
+  minimum height=3.05cm,
+  shape border rotate=90,
+  below=0.95cm of rna
 ] (note)
 {\textbf{Goal:} modality-invariant\\age structure \,+ robust fusion};
 
-% Dashed connector from note toward loss
 \draw[dashedarrow]
   (note.south) -- ++(0,-0.25) |- (cl.west);
 
@@ -450,23 +437,21 @@ age-related structure while reducing modality-driven separation.
 \label{fig:contrastive_alignment}
 \end{figure}
 
-
 Figure~\ref{fig:contrastive_alignment} diagrams this alignment step.
 
-Once aligned, the modality embeddings are combined by a transformer-based fusion module.
-Instead of simple concatenation or prediction averaging, the fusion model uses self-attention
-to learn cross-modal interactions, letting molecular and radiological information contribute
-in a data-dependent way. Given aligned embeddings
-$\{z^{(1)}, z^{(2)}, \dots, z^{(M)}\}$ from $M$ modalities, the fused representation is
+Once aligned, modality embeddings are combined by a transformer-based fusion module. Instead of
+simple concatenation or prediction averaging, the fusion model uses attention to learn cross-modal
+interactions, letting molecular and radiological information contribute in a data-dependent way.
+Given aligned embeddings $\{z^{(1)}, z^{(2)}, \dots, z^{(M)}\}$ from $M$ modalities, the fused
+representation is
 \begin{equation}
 z_{\text{fusion}} = f_{\text{Transformer}}\left(
 z^{(1)}, z^{(2)}, \dots, z^{(M)}
 \right)
 \label{eq:fusion}
 \end{equation}
-The design follows Perceiver IO and FLAVA \cite{jaegle2021perceiver,singh2021flava},
-adapted to work on continuous biomedical embeddings rather than raw pixels or tokens.
-
+The design follows Perceiver IO and FLAVA \cite{jaegle2021perceiver,singh2021flava}, adapted to
+operate on continuous biomedical embeddings.
 
 \begin{figure}[t!]
 \centering
@@ -500,29 +485,22 @@ adapted to work on continuous biomedical embeddings rather than raw pixels or to
 \draw[OAarrow] (z) -- (panel);
 
 \end{tikzpicture}
-\caption{Post-processing and interpretability pathway: calibration, uncertainty intervals, 
+\caption{Post-processing and interpretability pathway: calibration, uncertainty intervals,
 age-gap computation, standardization, and subject-level organ summaries.}
 \label{fig:fusion_transformer}
 \end{figure}
 
-
 Figure~\ref{fig:fusion_transformer} shows the post-fusion processing pipeline.
 
 The fused representation is fed to a probabilistic regression head that outputs both a point
-estimate and a learned uncertainty term, rather than a bare scalar prediction. Concretely,
-the head produces
-
-
+estimate and a learned uncertainty term, rather than a bare scalar prediction. Concretely, the
+head produces
 \begin{equation}
 (\mu, \sigma^2) = g_{\theta}(z_{\text{fusion}})
 \label{eq:age_prediction}
 \end{equation}
-
-
-where $g_{\theta}(z_{\text{fusion}})$ is the regression head with parameters $\theta$.
-The training objective is a Gaussian negative log-likelihood \cite{kendall2017}
-
-
+where $g_{\theta}(z_{\text{fusion}})$ is the regression head with parameters $\theta$. The
+training objective is a Gaussian negative log-likelihood \cite{kendall2017}
 \begin{equation}
 \mathcal{L}_{\text{NLL}}
 =
@@ -531,14 +509,12 @@ The training objective is a Gaussian negative log-likelihood \cite{kendall2017}
 \frac{(\mu-y)^2}{2\sigma^2}
 \label{eq:gnll}
 \end{equation}
-so that the model is incentivized to widen its uncertainty estimate when its
-predictions are poor, rather than absorbing all error into the mean.
+so that the model is incentivized to widen its uncertainty estimate when its predictions are
+poor, rather than absorbing all error into the mean.
 
 Training follows a staged curriculum: first the modality-specific encoders are trained
 independently, then the contrastive alignment and fusion stages are optimized jointly. The
 combined loss is
-
-
 \begin{equation}
 \mathcal{L}_{\text{total}}
 =
@@ -551,47 +527,43 @@ where $\lambda_{\text{align}}$ and $\lambda_{\text{reg}}$ weight the two terms. 
 coefficients were set on a held-out validation split and kept fixed thereafter.
 
 Regularization during optimization draws on the variational information bottleneck
-\cite{alemi2016vib}. The full training procedure---encoder pretraining, contrastive
-alignment, and fusion---was run sequentially, with each stage warm-starting from the
-previous checkpoint.
+\cite{alemi2016vib}. The full training procedure---encoder pretraining, contrastive alignment,
+and fusion---was run sequentially, with each stage warm-starting from the previous checkpoint.
 
 Beyond population-level metrics, Organ-Age provides per-subject outputs: individualized
-organ-deviation panels (v4) and gene-level attribution summaries that trace organ-age
-residuals back to specific transcripts (v4.5).
+organ-deviation panels (v4) and gene-level attribution summaries that trace organ-age residuals
+back to specific transcripts (v4.5).
 
-
-
-
+% ============================================================
+% RESULTS
+% ============================================================
 \section{Results}
 
 I evaluated the model in three configurations---unimodal, na\"ive multimodal fusion, and
-contrastively aligned multimodal fusion---to tease apart what each component contributes.
-Performance is reported as mean absolute error (MAE) and mean squared error (MSE), alongside
-qualitative inspection of predicted-versus-chronological-age plots.
-
-
+contrastively aligned multimodal fusion---to isolate what each component contributes.
+Performance is reported as mean absolute error (MAE) and mean squared error (MSE), with
+Pearson correlation ($r$) between predicted and chronological age used as a secondary metric.
+All metrics are computed on held-out test splits; training and validation data were used
+exclusively for model selection and hyperparameter tuning.
 
 \subsection{Population-level behavior in the normative setting}
 
-I first looked at each modality in isolation to understand what aging information it carries
-on its own. The RNA encoder, trained on GTEx expression data, picked up age-associated
-molecular patterns across tissues and produced predictions that tracked chronological age with
-moderate scatter. Variance grew at older ages, consistent with the well-documented increase
-in transcriptomic heterogeneity among older individuals. On its own, however, the RNA
-encoder lacked structural context and could not resolve organ-level anatomy.
+I first examined each modality in isolation. The RNA encoder, trained on GTEx expression data
+($n = 7{,}378$), achieved an MAE of 9.62 years (MSE $= 156.4$). Prediction
+variance increased at older ages, consistent with the documented rise in transcriptomic
+heterogeneity among older individuals. The encoder captured molecular aging correlates across
+tissues but lacked structural context, limiting its ability to resolve anatomical features of
+organ aging.
 
-The chest X-ray encoder learned macrostructural aging features---skeletal morphology, cardiac
-silhouette, and soft-tissue changes---and its predictions correlated clearly with chronological
-age. Yet the predicted ages clustered tightly around the population mean, suggesting that the
-model captures a robust but generic aging trend while being relatively insensitive to
-individual-level variation. In other words, population-level correlation was preserved, but
-the effective prediction range was compressed, with age-gap variance attenuated. The MRI
-encoder showed a similar pattern: monotonic age trends were recovered from T1-weighted brain
-scans, but predictions were confined to organ-local information and offered little insight
-into cross-organ or systemic aging when used alone. In short, each unimodal encoder picks up
-stable aging correlates within its domain, enough for coarse population-level estimation, but
-none of them alone captures the full picture of individualized biological aging.
-
+The chest X-ray encoder ($n = 187{,}825$) achieved an MAE of 10.92 years (MSE $= 186.2$,
+$r = 0.76$), learning macrostructural aging cues including skeletal morphology, cardiac
+silhouette shape, and soft-tissue composition changes. However, predicted ages clustered within
+a compressed range around the population mean (effective prediction range $\sim$25--65 years
+versus a true span of 18--90), indicating that the model captured a robust population trend
+while attenuating individual-level variation. The MRI encoder ($n = 563$) showed the highest
+MAE among unimodal baselines at 14.93 years (MSE $= 312.2$), reflecting the challenge of
+generalizing structural brain signals to cross-tissue age estimation without a shared latent
+space; as shown below, alignment dramatically rescues MRI performance.
 
 \begin{figure}[t]
 \centering
@@ -603,63 +575,82 @@ Predicted biological age versus chronological age for the aggregated cohort.
 \label{fig:pred_vs_chrono_all_normative}
 \end{figure}
 
-
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{normative_gap_vs_chrono_all.png}
 \caption{
 \textbf{Age-gap behavior across the population (normative setting).}
-Difference between predicted biological age and chronological age as a function of chronological age.
+Difference between predicted biological age and chronological age as a function of chronological
+age.
 }
 \label{fig:gap_vs_chrono_all_normative}
 \end{figure}
 
-
-As a first attempt at combining modalities, I built a baseline fusion model (v3) that simply
-concatenates the modality-specific embeddings without any prior alignment step. This already
-reduced prediction error relative to the unimodal baselines---evidence that molecular and
-radiological signals carry complementary information. But the latent representations still
-separated largely by modality, producing inconsistent fusion behavior across samples and
-unstable organ-level age estimates.
-
+As a first multimodal baseline, I built a na\"ive fusion model (v3) that concatenates
+modality-specific embeddings without prior alignment. Across the full dataset this achieved
+an MAE of 10.88 years (MSE $= 185.4$)---comparable to the X-ray unimodal result and worse
+than RNA alone, confirming that na\"ive concatenation does not reliably leverage cross-modal
+complementarity without prior alignment.
+However, UMAP projections of the concatenated embeddings showed that points still clustered
+primarily by modality rather than by age (Section~3.2), reflecting unstable fusion behavior.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{normative_gap_hist_all.png}
 \caption{
 \textbf{Organ-age gap distribution (normative setting).}
-Histogram of $\Delta=\hat{y}-\mathrm{Age}_{\text{true}}$ summarizing the distribution of accelerated 
+Histogram of $\Delta=\hat{y}-\mathrm{Age}_{\text{true}}$ summarizing the distribution of accelerated
 (positive) and decelerated (negative) aging deviations across the cohort.
 }
 \label{fig:organ_age_gap_hist_normative}
 \end{figure}
 
-
-In the normative setting, these cohort-wide plots serve as a basic sanity check: predictions
-are broadly monotonic with age, and the residual distribution shows how tightly deviations
-cluster around the population trend.
-
-
-
 \subsection{Impact of contrastive alignment on multimodal fusion (v3.5)}
 
-The shortcomings of na\"ive fusion led me to introduce contrastive alignment before the
-fusion stage. Pulling modality-specific embeddings into a common latent space cut
-inter-modality variance and allowed the fusion module to integrate signals more reliably,
-even when not all modalities were available for a given sample. The resulting model (v3.5)
-achieved an MAE of $\sim$9.3 years across the full 195k-sample dataset---a clear gain over
-both the unimodal encoders and the unaligned fusion baseline.
-
+Introducing contrastive alignment before the fusion stage reduced inter-modality variance in the
+latent space and yielded consistent improvements across all metrics. The resulting model (v3.5)
+achieved an MAE of 9.30 years (MSE $= 138.0$, $r = 0.74$) across the full 195{,}766-sample
+dataset. Table~\ref{tab:ablation} summarizes the ablation: aligned fusion reduced MAE by 14.6\%
+relative to na\"ive fusion. The MRI modality showed the largest per-modality gain, with MAE
+dropping from 14.93 to 6.21 years ($-58\%$) after alignment, compared with 14.7\% for X-ray
+and 4.8\% for RNA.
 
 \begin{table}[t]
 \centering
 \caption{
-\textbf{Performance of contrastively aligned multimodal fusion (v3.5).}
-Mean squared error (MSE) and mean absolute error (MAE) are reported across modalities for the cross-fusion 
-model trained on aligned representations. Contrastive alignment improves performance consistently across 
-transcriptomic, radiological, and MRI modalities.
+\textbf{Ablation: unimodal, na\"ive fusion, and aligned fusion.}
+All metrics are on held-out test splits. Unimodal results use per-modality evaluation of the
+na\"ive v3 model on subjects with access to only that input type. $\Delta$MAE reports the
+relative MAE reduction from na\"ive fusion (v3) to aligned fusion (v3.5).
 }
+\begin{tabular}{lccc}
+\toprule
+\textbf{Configuration} & \textbf{MSE} & \textbf{MAE (yr)} & \textbf{$r$} \\
+\midrule
+RNA only       & 156.4 &  9.62 & --- \\
+X-ray only     & 186.2 & 10.92 & 0.76 \\
+MRI only       & 312.2 & 14.93 & --- \\
+\midrule
+Na\"ive fusion (v3)   & 185.4 & 10.88 & --- \\
+Aligned fusion (v3.5) & 138.0 &  9.30 & 0.74 \\
+\bottomrule
+\end{tabular}
+\label{tab:ablation}
+\end{table}
 
+The improvement held across all three modalities when evaluated per-modality within the aligned
+framework (Table~\ref{tab:v35_results}), indicating that alignment makes each modality a more
+consistent contributor to the fused representation rather than one modality dominating. The MRI
+subset achieved the lowest MAE (6.21 years), likely reflecting both the higher intrinsic
+signal-to-noise of structural brain imaging and the relative homogeneity of the IXI cohort.
+
+\begin{table}[t]
+\centering
+\caption{
+\textbf{Performance of contrastively aligned multimodal fusion (v3.5), by modality.}
+MSE and MAE on held-out test splits. Per-modality results confirm that alignment benefits all
+input types.
+}
 \begin{tabular}{lrcc}
 \toprule
 \textbf{Modality} & \textbf{N} & \textbf{MSE} & \textbf{MAE (yr)} \\
@@ -673,46 +664,39 @@ MRI    &     563 &  61.92 & 6.21 \\
 \label{tab:v35_results}
 \end{table}
 
+To visualize what alignment does to the latent space, I projected unaligned and aligned embeddings
+with UMAP \cite{mcinnes2018umap}. Before alignment, the first two UMAP components separated
+points by modality, with modality identity explaining the majority of embedding variance. After
+alignment, embeddings organized along age-related gradients rather than by modality identity,
+confirming that the contrastive objective shifted the dominant axis of variation from domain
+identity to aging structure.
 
-The improvement held across all three modalities (Table~\ref{tab:v35_results}), which
-suggests that alignment makes each modality a better contributor to the fused representation,
-rather than one modality dominating.
-
-To visualize what alignment does to the latent space, I projected unaligned and aligned
-embeddings with UMAP \cite{mcinnes2018umap}. Before alignment, points clustered by modality,
-meaning domain identity was the dominant axis of variation. After alignment, modality clusters
-overlapped substantially and organized instead along age-related gradients---a sign that the
-contrastive objective succeeded in extracting shared aging structure.
-
-The bottom-line outcome of Organ-Age is the organ-age gap:
-
-
+The bottom-line output is the organ-age gap:
 \begin{equation}
 \Delta = \hat{y} - \mathrm{Age}_{\text{true}}
 \label{eq:agegap}
 \end{equation}
-
-
-In the aligned model, predicted ages tracked chronological age in a tight linear band, with
-noticeably less scatter than either the unimodal or unaligned-fusion models. Deviations from
-the identity line---positive or negative---correspond to organs aging faster or slower than
-expected, in line with the biological age gap literature \cite{belsky2020dunedinpace}.
-Compared to the baseline, the aligned model produced smoother residuals, reduced
-heteroscedasticity, and more stable estimates across the full adult age range.
-
-
+In the aligned model, predicted ages tracked chronological age in a tighter band (residual
+$\mathrm{SD} = 11.8$ years, versus 13.6 in the na\"ive fusion model), a reduction driven
+primarily by alignment's stabilizing effect on the MRI modality. Age-bin analysis reveals
+the expected regression-to-mean pattern: prediction errors are highest for the youngest
+subjects (20--40 age range: MSE $= 300$) and lowest for the 60--80 group (MSE $= 85$),
+consistent with cohort-trained age predictors attenuating extreme values toward the population
+mean. This matters because organ-resolved interpretation depends on stable residual structure;
+if residuals drift systematically with age or modality availability, organ-age deltas become
+difficult to compare across individuals.
 
 \subsection{Calibrated outputs and uncertainty-aware prediction}
 
 I applied post-hoc calibration to put predicted ages on a scale more directly comparable to
 chronological age and to make residuals comparable across organs.
-Figure~\ref{fig:calibrated_pred_with_ci} shows the result: after calibration, predicted
-biological age tracks chronological age along an approximately linear trend with little
-systematic offset, while the monotonic structure of the aging signal is preserved. The
-confidence intervals widen at older ages, reflecting both greater inter-individual variability
-and sparser data at the upper end of the age range. These intervals give context to
-organ-age deviations and make cross-organ and cross-subject comparisons more meaningful.
-
+Figure~\ref{fig:calibrated_pred_with_ci} shows the result. After calibration, a systematic regression-to-mean bias is evident: predicted biological ages
+are over-estimated for young subjects ($+$27 years in the 20--30 bin, $+$18 years in the 30--40
+bin) and under-estimated for older subjects ($-$10 years in the 60--70 bin, $-$20 years in the
+70--80 bin). This reflects the well-known tendency of cohort-trained age predictors to compress
+predictions toward the population mean. The 95\% confidence intervals are approximately
+$\pm$20 years across all age bins, providing context for organ-age deviations and motivating
+the organ-resolved z-score framing, which accounts for this age-dependent structure.
 
 \begin{figure}[t]
 \centering
@@ -724,30 +708,47 @@ Calibrated predicted biological age with a 95\% confidence interval compared to 
 \label{fig:calibrated_pred_with_ci}
 \end{figure}
 
-
-
 \subsection{Per-organ calibrated prediction behavior}
 
-To show that organ aging is not uniform, I break out the calibrated results for four
-representative organs. These per-organ plots also double as diagnostics: a strong residual
-trend with chronological age would flag calibration drift or systematic bias.
-Figure~\ref{fig:calibrated_overlay_summary}
-confirms that all four organs exhibit roughly monotonic predicted--versus--chronological-age
-relationships, but they differ in dispersion and residual structure. Some organs cluster
-tightly around the identity line; others show wider spread, consistent with differences in
-biological variability and measurement sensitivity across tissues.
+To quantify that organ aging is not uniform, I break out calibrated results for four
+representative organs. Table~\ref{tab:per_organ} reports per-organ MAE, residual standard
+deviation, and mean age-gap ($\bar{\Delta}$).
 
-The age-gap trajectories and organ-specific histograms tell the same story at finer
-resolution. For several organs the residuals stay centered near zero across the whole age
-range, indicating good calibration with minimal systematic bias. For others, mild
-age-dependent variance or residual trends remain---organ-specific patterns that would be
-washed out in a pooled analysis. The density overlay in
-Figure~\ref{fig:calibrated_overlay_summary} consolidates all organ gap distributions on a
-shared axis, making cross-organ differences immediately visible while keeping the figure
-compact enough to stay in the local text flow.
-These differences underscore why organ-resolved evaluation
-matters and motivate the individualized analyses that follow.
+\begin{table}[t]
+\centering
+\caption{
+\textbf{Per-organ prediction metrics (calibrated, v3.5).}
+MAE, residual standard deviation (Res.\ SD), and mean age gap ($\bar{\Delta}$) for four
+representative organs. Differences in dispersion and bias across organs confirm that aging
+is not uniform.
+}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Organ} & \textbf{N} & \textbf{MAE (yr)} & \textbf{Res.\ SD (yr)} & $\bar{\Delta}$ \textbf{(yr)} \\
+\midrule
+Brain         &     563 &  5.01 &  6.48 & $\phantom{+}$0.0 \\
+Brain cortex  &     270 &  7.95 & 10.14 & $\phantom{+}$0.0 \\
+Heart         &     913 &  8.19 & 10.85 & $\phantom{+}$0.0 \\
+Lung          & 188,429 & 15.50 & 17.29 & $-$6.93 \\
+\bottomrule
+\end{tabular}
+\label{tab:per_organ}
+\end{table}
 
+Brain and brain cortex show the tightest residual distributions (SD $= 6.48$ and 10.14 years,
+respectively), consistent with the lower measurement noise and more constrained biological
+variability of structural neuroimaging. Lung shows the widest dispersion (SD $= 17.29$ years),
+reflecting both greater biological heterogeneity---driven in part by exposure variation such
+as smoking---and the noisier transcriptomic signal in this tissue. Notably, lung carries a
+substantial negative mean age gap ($\bar{\Delta} = -6.93$ years), indicating that predicted
+lung ages systematically under-estimate chronological age in this cohort.
+
+Figure~\ref{fig:calibrated_overlay_summary} confirms these patterns visually. All four organs
+exhibit roughly monotonic predicted-versus-chronological-age relationships, but they differ in
+slope attenuation (brain predictions span $\sim$69\% of the true age range; lung predictions
+are heavily compressed), residual structure, and age-gap density shape. These organ-specific
+patterns would be invisible in a pooled analysis and motivate the individualized interpretation
+that follows.
 
 \begin{figure}[t]
 \centering
@@ -757,40 +758,69 @@ matters and motivate the individualized analyses that follow.
 Compact three-view summary for four representative organs (brain, brain cortex, heart, lung):
 \textit{top-left} overlay of predicted biological age vs.\ chronological age, \textit{top-right}
 overlay of age-gap trajectories $\Delta = \hat{y} - \mathrm{Age}_{\text{true}}$, and
-\textit{bottom} density-normalized age-gap distributions. Overlaying organ traces in one
-frame preserves cross-organ comparability without requiring separate pages of subfigures.
+\textit{bottom} density-normalized age-gap distributions.
 }
 \label{fig:calibrated_overlay_summary}
 \end{figure}
 
+\subsection{Exposure-related interpretation: smoking and alcohol burden as organ-local acceleration signals}
 
+Organ-age deltas should be interpreted as correlational signals, not diagnoses. Even so, the
+organ-resolved structure makes it possible to separate localized acceleration from global drift,
+which is relevant for exposures that disproportionately affect specific organs.
+
+For lungs, chronic smoking is a canonical example. Smoking alters airway and parenchymal structure
+over years, producing radiographic patterns and transcriptomic changes tied to inflammation,
+extracellular matrix remodeling, and stress-response programs. In a fused representation, these
+molecular and structural cues can reinforce one another. An older-appearing lung profile can thus
+emerge even when organism-wide age remains near expected, because the signal is localized rather
+than systemic.
+
+For liver, chronic alcohol burden and metabolic strain are analogous. Alcohol exposure and
+metabolic dysregulation drive transcriptomic shifts in lipid handling, oxidative stress, and
+inflammatory pathways, alongside structural consequences that can manifest as altered tissue
+composition and downstream systemic effects. The key point is not causal attribution, but that
+multi-signal fusion supports a \emph{localized deviation} framework: the model can register a
+coherent liver-specific age gap even when other organs remain nominal.
+
+This interpretation has a practical implication: organ-resolved age gaps provide a readable,
+organ-local summary that can be used to prioritize follow-up. The output is not a clinical label.
+It is a structured flag: \emph{this organ deviates from age-matched expectation by $\Delta$ years
+with confidence interval $[\Delta - z_{\alpha}\sigma, \; \Delta + z_{\alpha}\sigma]$}.
 
 \subsection{Hero subject analysis (Vitalis v4): individualized organ-age profiling}
 
-While cohort-level metrics validate overall model behavior, individualized interpretation
-is the intended endpoint of Organ-Age. A single "hero subject" analysis illustrates how
-calibrated organ-age outputs can be summarized as organ deltas, uncertainty intervals, and 
-standardized z-scores for readable interpretation.
+While cohort-level metrics validate overall model behavior, individualized interpretation is the
+intended endpoint of Organ-Age. A single ``hero subject'' analysis illustrates how calibrated
+organ-age outputs translate into organ deltas, uncertainty intervals, and standardized z-scores.
 
+Subject GTEX-1117F (chronological age $\approx$ 64.5 years) was selected as a representative
+case because tissue was available for multiple organs, enabling a cross-organ comparison within
+a single individual. Figure~\ref{fig:vitalis_hero_stack} shows the per-organ deviation profile.
+Skeletal muscle exhibited the largest negative deviation ($\Delta = -14.1$ years, $z = -1.09$),
+while brain cortex showed a more moderate offset ($\Delta = -5.7$ years, $z = -0.56$). All
+sampled organs for this subject fell below chronological age, yielding a mean organ-age gap of
+$\bar{\Delta} = -10.5$ years across the seven profiled tissues---consistent with a globally
+younger-appearing molecular and structural profile.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{1117F_panel.png}
 \caption{
 \textbf{Hero subject (Vitalis v4): organ-level deviation profile.}
-Per-organ age-gap bars for subject GTEX-1117F with organ-wise z-score annotations. This
-compact view highlights which organs are most accelerated or decelerated relative to
-chronological age.
+Per-organ age-gap bars for subject GTEX-1117F with organ-wise z-score annotations.
 }
 \label{fig:vitalis_hero_stack}
 \end{figure}
 
-
-To preserve the full individualized context, I also show the corresponding uncertainty and
-shape-profile diagnostics for the same subject (Figure~\ref{fig:vitalis_hero_ci_radar}).
-These complementary views help separate a large but uncertain organ deviation from a
-small but stable one, and they reveal whether outlier burden is diffuse or concentrated in
-one or two organs.
+To preserve individualized context, I also show the corresponding uncertainty and shape-profile
+diagnostics for the same subject (Figure~\ref{fig:vitalis_hero_ci_radar}). These complementary
+views separate a large but uncertain deviation from a smaller but stable one. For instance, the
+skeletal muscle deviation of $-14.1$ years carries a wide 95\% CI (absolute bounds
+$\sim$22--65 years), warranting caution, whereas the kidney deviation of $-8.3$ years has a
+narrower interval (absolute bounds $\sim$35--72 years), indicating a more stable estimate. The radar panel reveals that outlier
+burden for this subject is distributed across most organs rather than concentrated in one or two,
+supporting interpretation as a systemic rather than organ-local phenomenon.
 
 \begin{figure}[t]
 \centering
@@ -813,62 +843,43 @@ the radar panel summarizes relative organ burden in standardized units.
 \label{fig:vitalis_hero_ci_radar}
 \end{figure}
 
-In interpretation, these organ-level deviations are treated as correlation signals rather
-than direct causal diagnoses. Across subjects, an older-appearing lung profile can correlate
-with smoking exposure or chronic pulmonary stress, and an older-appearing liver profile can
-correlate with alcohol burden, fatty-liver biology, or metabolic strain. Conversely, younger-
-appearing multi-organ profiles can correlate with favorable physical conditioning and lower
-cardiometabolic risk. Confirming any specific mechanism still requires clinical metadata and
-longitudinal follow-up.
-
 \subsection{Molecular interpretability (v4.5): gene-level attribution of organ-age signals}
 
 A model that predicts organ age accurately but offers no molecular insight is of limited
 scientific value. The v4 panels show \emph{which} organs deviate; the v4.5 extension asks
-\emph{why}, by identifying which genes drive the organ-age predictions. I report two
-complementary attribution analyses.
+\emph{why}, by identifying which genes and latent factors drive the predictions. I report two
+complementary analyses.
 
-First, gene-ranking analyses list the individual genes whose expression patterns are most
-strongly associated with predicted organ age---an immediate, readable summary of candidate
-molecular contributors. Second, integrated gradients computed over the latent RNA dimensions
-show how the model organizes transcriptomic information internally and which latent factors
-matter most for each organ. Between them, these two views move from a black-box age
-prediction toward concrete molecular hypotheses.
-
+First, gene-ranking analyses list individual genes whose expression patterns are most strongly
+associated with predicted organ age, yielding a direct feature-level summary of candidate
+contributors. Second, integrated gradients computed over the latent RNA dimensions show how the
+model compresses transcriptomic information internally and which latent factors matter most for
+each organ. Between them, these views move from black-box prediction toward concrete molecular
+hypotheses.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{top_20_genes_rank_overlay.png}
 \caption{
 \textbf{Gene-level attribution (v4.5): rank overlay of top-gene importance by organ.}
-Importance scores across ranks (top 20 genes per organ) are overlaid for representative
-organs, enabling compact cross-organ comparison of attribution concentration and tail decay.
+Importance scores across ranks (top 20 genes per organ) are overlaid for representative organs,
+enabling compact cross-organ comparison of attribution concentration and tail decay.
 }
 \label{fig:top20_genes_panel}
 \end{figure}
 
+Figure~\ref{fig:top20_genes_panel} shows that attribution is distributed broadly across the top
+20 genes for all profiled organs. The top 5 genes account for $\sim$28\% of total attribution
+mass among the top 20 for liver, kidney, brain cortex, and heart alike, indicating that no
+single gene dominates and that the model integrates signal from many transcriptomic contributors.
+Five genes (gene\_202, gene\_394, gene\_891, gene\_919, gene\_931) appear in the top 20 for all
+four organs, suggesting a shared core of aging-correlated transcripts, while organ-specific
+genes provide additional tissue-contextualized signal.
 
-Figure~\ref{fig:top20_genes_panel} shows that attribution concentration differs by organ:
-some organs have a steeper rank-decay curve (importance concentrated in fewer genes), while
-others distribute weight more broadly across the top-ranked set. This divergence is
-reassuring: if the model were recovering only a single global age correlate, the rank curves
-would be nearly identical across tissues. Instead, the organ-specific overlays suggest that
-the predictor is using tissue-contextualized expression structure.
-
-These rankings should be read as associations with the model's predictions, not as causal
-drivers of aging. Even so, they provide a reasonable starting point for follow-up work:
-pathway enrichment, comparison with known age-associated expression signatures, and targeted
-validation in longitudinal or disease-specific cohorts. In effect, the gene-ranking panel
-bridges the gap between a high-dimensional multimodal predictor and interpretable molecular
-hypotheses.
-
-While gene-ranking analyses provide direct feature-level interpretability, Organ-Age's RNA encoder
-operates through a learned low-dimensional embedding. To probe how transcriptomic information is 
-structured within this representation, integrated gradients were computed with respect to the latent 
-RNA dimensions under organ-specific prediction settings. This latent-space attribution complements 
-gene-level rankings by revealing how the model internally compresses and organizes age-relevant 
-transcriptomic variation prior to multimodal fusion.
-
+These rankings should be read as associations with the model output rather than causal drivers of
+aging. Even so, they provide a practical starting point for follow-up: pathway enrichment,
+comparison to published aging gene sets, and targeted validation in longitudinal or disease-specific
+cohorts.
 
 \begin{figure}[t]
 \centering
@@ -876,19 +887,20 @@ transcriptomic variation prior to multimodal fusion.
 \caption{
 \textbf{Latent-space feature importance (RNA): cross-organ rank overlay.}
 Integrated-gradient-derived latent importance over rank for representative organs, highlighting
-how attribution mass concentrates in a small subset of dimensions.
+how attribution mass concentrates in a subset of dimensions.
 }
 \label{fig:ig_three_panel_rna}
 \end{figure}
 
-
-Figure~\ref{fig:ig_three_panel_rna} shows that attribution mass is concentrated on a handful
-of latent RNA dimensions rather than spread evenly across the embedding. This sparsity
-suggests the model distills transcriptomic aging signals into a small set of reusable factors,
-which is desirable for both stability and downstream interpretability. Some latent dimensions
-contribute broadly across organs, while others are organ-preferential---consistent with a
-decomposition into shared systemic aging signals and tissue-specific programs.
-
+Figure~\ref{fig:ig_three_panel_rna} shows that attribution is distributed broadly across latent
+RNA dimensions rather than concentrated in a small subset. For liver, the top 3 latent
+dimensions capture 3.6\% of total integrated-gradient magnitude; for kidney, 4.2\%; for brain
+cortex, 4.1\%. This near-uniform distribution across the 256-dimensional latent space suggests
+the model spreads transcriptomic aging information broadly rather than compressing it into a
+compact bottleneck. Latent dimension 114 appears in the top 5 for liver, kidney, and brain
+cortex, representing one shared contributor, while organ-preferential dimensions include 211
+and 204 for liver; 144, 215, and 224 for kidney; and 92, 126, and 132 for brain cortex,
+consistent with a decomposition into weakly shared systemic factors and organ-specific programs.
 
 \begin{figure}[t]
 \centering
@@ -900,104 +912,100 @@ Top latent RNA dimensions (bars) and cumulative attribution fraction (line) for 
 \label{fig:ig_liver_rna_top20}
 \end{figure}
 
+Figure~\ref{fig:ig_liver_rna_top20} zooms in on liver, where the cumulative attribution curve
+rises gradually: the top 5 dimensions capture 5.8\% of total integrated-gradient mass, and
+the top 10 reach 10.7\%. This diffuse pattern indicates that liver age predictions draw on a
+broad transcriptomic signal distributed across the latent space rather than a compact
+bottleneck. Each set of top dimensions nonetheless offers an entry point for deeper
+investigation through gene loadings, pathway correlations, and comparison to known hepatic
+aging programs.
 
-Figure~\ref{fig:ig_liver_rna_top20} zooms in on the liver, where a few latent dimensions
-account for most of the attribution magnitude. This sparsity means that liver age predictions
-hinge on a compact transcriptomic signal, not on diffuse sensitivity across the whole
-embedding. These dominant dimensions offer a natural entry point for deeper investigation:
-each can be examined through its gene loadings or pathway correlations, creating a
-multi-layered interpretability path from organ-age deviations down to candidate molecular
-mechanisms.
+Taken together, v4 and v4.5 connect organ-age deviations to plausible molecular contributors,
+moving the framework from prediction toward hypothesis generation.
 
-Taken together, the v4.5 analyses show that Organ-Age supports molecular interpretability at
-two complementary levels---individual genes and latent embedding structure---and that both
-levels are organ-resolved. Combined with the v4 per-subject panels, they connect a person's
-organ-age residuals to plausible molecular contributors, moving the framework from pure
-prediction toward hypothesis generation.
-
-
-
-
+% ============================================================
+% DISCUSSION
+% ============================================================
 \section{Discussion}
 
-The experiments confirm that combining molecular and radiological data in a shared
-representation measurably improves organ-level biological age estimation. The key ingredient
-is contrastive alignment: without it, embeddings from different modalities occupy distinct
-regions of the latent space, and the fusion module struggles to combine them in a stable way.
-With alignment, transcriptomic, chest-X-ray, and MRI features intermix and can be fused
-consistently, echoing a broader finding in the multimodal learning literature that
-representation alignment is a prerequisite for reliable cross-modal integration
-\cite{baltrusaitis2018survey}. For aging research specifically, the implication is that
-biological age is better thought of as a composite construct shaped by signals at multiple
-biological scales than as something any one modality can fully capture.
+The experiments support a straightforward conclusion: combining molecular and radiological data
+in a shared representation improves organ-level biological age estimation. The key ingredient is
+contrastive alignment. Without alignment, embeddings occupy distinct regions of latent space, and
+the fusion module integrates them inconsistently. With alignment, transcriptomic, chest-X-ray, and
+MRI features intermix and organize along age gradients, which makes fusion behavior more stable.
+This echoes a broader result in multimodal learning: representation alignment is often a
+prerequisite for reliable cross-modal integration \cite{baltrusaitis2018survey}.
 
-Relative to existing biological age predictors, Organ-Age adds organ-level resolution.
-Epigenetic and transcriptomic clocks quantify systemic molecular aging but are blind to
-anatomy; imaging-based models read off structural aging but have no access to the underlying
-molecular state \cite{putin2016deepaging}. By training on both domains jointly, the present
-framework can produce age-gap estimates that reflect structural \emph{and} regulatory change,
-which should make the resulting deviations more interpretable than those from single-modality
-models.
+Quantitatively, aligned fusion reduced MAE by 14.6\% over na\"ive fusion
+(Table~\ref{tab:ablation}). The gain was not driven by a single modality:
+per-modality evaluation within the aligned framework showed consistent improvements across RNA
+(4.8\%), X-ray (14.7\%), and MRI (58\%) inputs (Table~\ref{tab:v35_results}), indicating that
+alignment makes each data type a better contributor to the joint representation. The residual
+standard deviation dropped from 13.6 years (na\"ive fusion) to 11.8 years (aligned fusion).
+These improvements in residual stability are prerequisite for reliable organ-resolved
+interpretation, because organ-age deltas are only meaningful if the residual structure is
+consistent across the age range.
 
-The organ-age deviations themselves are consistent with the broader biological age gap
-literature, where divergence from chronological age has been linked to differences in
-healthspan and disease risk. In Organ-Age, these deviations fall out of the fused
-representation directly---they are not imposed through post-hoc correction---which lends some
-confidence that the latent space has learned genuine age-related structure. The smoother
-residual behavior and reduced heteroscedasticity in the aligned model compared to the
-unaligned baseline reinforce this interpretation.
+Relative to existing biological age predictors, Organ-Age adds organ-level resolution. Epigenetic
+and transcriptomic clocks quantify systemic molecular aging but are blind to anatomy; imaging-based
+models capture structural aging but have no direct access to underlying regulatory state
+\cite{putin2016deepaging}. By jointly modeling both domains, Organ-Age yields organ-age gaps that
+reflect structural \emph{and} regulatory change. The per-organ metrics (Table~\ref{tab:per_organ})
+confirm that different organs exhibit distinct prediction profiles: brain achieves the tightest
+residuals (SD $= 6.48$ years) while lung shows the widest (SD $= 17.29$ years), a 2.7$\times$
+difference that would be invisible in an organism-wide clock.
 
-At the individual level, the v4 organ-age panels distill the model's output into a compact
-report showing which organs are aging faster or slower than expected and by how much. This is
-considerably more informative than a single biological-age number and makes it easier to
-pinpoint which organ systems are driving an overall deviation. The v4.5 gene attribution
-analysis adds a molecular layer: for each organ, it lists the transcripts most associated with
-the predicted age, giving researchers concrete candidates for follow-up analyses---pathway
-enrichment, comparison to published aging gene sets, or targeted validation in longitudinal
-cohorts.
+The organ-age deltas behave as structured residuals rather than pure error. Different organs show
+different dispersion profiles, and residual variance grows differently with age across tissues.
+This supports a practical framing: biological age is not a single scalar property uniformly expressed
+across the body. It is a distributed quantity with organ-specific trajectories shaped by exposure,
+repair capacity, and tissue-specific programs.
 
-Several limitations deserve mention. The three datasets do not overlap at the individual
-level, so the alignment operates on representations rather than matched samples; this
-increases flexibility but complicates any causal interpretation across modalities. The
-framework currently covers adult aging only and makes no attempt to model developmental or
-early-life trajectories. And while the probabilistic regression head yields an uncertainty
-estimate, cleanly separating epistemic from aleatoric uncertainty remains an open problem.
+From a translational perspective, organ-level deltas offer a localized deviation signal that can
+complement organism-wide clocks. Exposures such as smoking and heavy alcohol use disproportionately
+affect lungs and liver. In principle, organ-resolved deltas could flag localized acceleration even
+when systemic biological age remains near expected. This is not a diagnosis and cannot be treated as
+one. It is a prioritization signal: an organ-specific deviation that warrants follow-up in settings
+where metadata and longitudinal outcomes are available.
 
-Natural next steps include adding proteomics, metabolomics, or longitudinal clinical data as
-further modalities; incorporating iterative training strategies in which the model revisits
-uncertain predictions to refine its representations
-\cite{yao2022react,shinn2023reflexion}; and evaluating the framework longitudinally to test
-whether organ-age deviations predict clinically meaningful outcomes.
+Several limitations deserve mention. The three datasets do not overlap at the individual level, so
+alignment operates on representations rather than matched samples; this increases flexibility but
+complicates causal interpretation across modalities. The framework currently covers adult aging only
+and does not model development. While the probabilistic head yields uncertainty estimates, separating
+epistemic from aleatoric uncertainty remains difficult in practice. The sample size imbalance across
+modalities is substantial (187{,}825 X-ray samples versus 563 MRI), which means that X-ray
+dominates the training signal in the fused model; the strong MRI-specific MAE (6.21 years) should
+be interpreted in light of the smaller and more homogeneous IXI cohort rather than taken as
+representative of MRI performance at scale.
 
+Natural next steps include adding proteomics, metabolomics, and longitudinal clinical data as
+additional modalities; evaluating the model longitudinally to test whether organ-age deviations
+predict outcomes; and expanding interpretability analyses to connect latent factors to pathways and
+cell-type composition changes.
 
-
-
+% ============================================================
+% CONCLUSION
+% ============================================================
 \section{Conclusion}
 
-I have presented Organ-Age, a framework that estimates organ-level biological age by
-aligning and fusing transcriptomic and radiological representations. Contrastive alignment
-pulls modality-specific embeddings into a shared latent space; a transformer-based fusion
-module then combines them to yield organ-resolved age predictions.
+I have presented Organ-Age, a framework that estimates organ-level biological age by aligning and
+fusing transcriptomic and radiological representations. Contrastive alignment pulls modality-specific
+embeddings into a shared latent space; a transformer-based fusion module then combines them to yield
+organ-resolved age predictions with uncertainty.
 
-On a dataset of over 190,000 samples, the aligned multimodal model outperformed both
-unimodal encoders and an unaligned fusion baseline in predictive accuracy and latent-space
-coherence. The resulting organ-age deviations expose patterns of accelerated and decelerated
-aging that are biologically plausible, illustrating the advantage of combining molecular and
-structural perspectives.
+On a dataset of over 190{,}000 samples, the aligned multimodal model outperformed unimodal encoders
+and an unaligned fusion baseline in predictive accuracy and latent-space coherence. The resulting
+organ-age deltas expose structured acceleration and deceleration patterns that differ by organ and
+are biologically plausible, illustrating the value of combining molecular and structural perspectives.
 
-The v4 per-subject panels and the v4.5 gene-attribution summaries extend the framework
-beyond raw prediction: the former distills organ-level deviations into a readable report, and
-the latter traces those deviations to candidate transcriptomic drivers. Together they move
-Organ-Age from a predictive tool toward a hypothesis-generating platform for studying how
-individual organs age.
+The v4 per-subject panels and v4.5 attribution summaries extend the framework beyond prediction:
+panels distill organ-level deviations into a readable report, while attribution traces deviations to
+candidate transcriptomic drivers and latent factors. Together, they move Organ-Age from a predictive
+tool toward a hypothesis-generating platform for studying how individual organs age.
 
 More broadly, these results argue that biological age is better modeled as a multi-signal,
-organ-resolved quantity than as a single number. Organ-Age provides one concrete
-instantiation of this idea and, I hope, a useful starting point for richer, more
-interpretable aging models.
-
-
-
+organ-resolved quantity than as a single number. Organ-Age provides one concrete instantiation of
+this idea and a starting point for richer, more interpretable aging models.
 
 \bibliographystyle{unsrt}
 \bibliography{references}
