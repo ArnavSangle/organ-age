@@ -26,6 +26,59 @@ os.makedirs(CACHEDIR, exist_ok=True)
 
 BG   = "#0f0f1a"
 FONT = "Georgia, 'Times New Roman', serif"
+TEXT_SCALE = 2.2
+AXIS_TEXT_SCALE = TEXT_SCALE / 2.0
+
+def fs(px):
+    """Scale font sizes for poster readability without changing figure geometry."""
+    return int(round(px * TEXT_SCALE))
+
+def fas(px):
+    """Axis text/ticks should be smaller than titles/legends."""
+    return int(round(px * AXIS_TEXT_SCALE))
+
+def _split_title_lines(text, max_chars=80):
+    if len(text) <= max_chars:
+        return [text]
+    if " — " in text:
+        left, right = text.split(" — ", 1)
+        if max(len(left), len(right)) <= (max_chars - 8):
+            return [left, right]
+    mid = len(text) // 2
+    cut = text.rfind(" ", 0, mid)
+    if cut == -1:
+        cut = text.find(" ", mid)
+    if cut == -1:
+        return [text]
+    return [text[:cut], text[cut + 1:]]
+
+def _fit_plotly_title(text, base_px=52, min_px=18):
+    lines = _split_title_lines(text)
+    longest = max(len(line) for line in lines)
+    line_count = len(lines)
+    max_by_width = int(2100 / max(0.56 * longest, 1.0))
+    max_by_margin = int(115 / (1.22 * line_count))
+    size = min(fs(base_px), max_by_width, max_by_margin)
+    size = max(size, fs(min_px))
+    return dict(
+        text="<br>".join(lines),
+        font=dict(family=FONT, color="white", size=size),
+        x=0.5,
+        y=0.975,
+        xanchor="center",
+        yanchor="top",
+        automargin=True,
+    )
+
+def _fit_mpl_title(text, base_px=52, min_px=18):
+    lines = _split_title_lines(text)
+    longest = max(len(line) for line in lines)
+    line_count = len(lines)
+    max_by_width = int(40 * 34 / max(longest, 1))
+    max_by_height = int(28 / max(1.15 * line_count, 1.0))
+    size = min(fs(base_px), fs(max_by_width), fs(max_by_height))
+    size = max(size, fs(min_px))
+    return "\n".join(lines), size
 
 AXIS_STYLE = dict(
     backgroundcolor=BG,
@@ -41,7 +94,7 @@ AXIS_STYLE = dict(
 )
 
 def _title_font(size=28):
-    return dict(family=FONT, color="rgba(160,160,220,0.8)", size=size)
+    return dict(family=FONT, color="rgba(160,160,220,0.8)", size=fas(size))
 
 def save(fig, stem):
     html = os.path.join(HTMLDIR, f"{stem}.html")
@@ -96,8 +149,8 @@ if os.path.exists(coords_path) and os.path.exists(ages_path):
             cmin=20, cmax=85,
             showscale=True,
             colorbar=dict(
-                title=dict(text="Age (years)", font=dict(family=FONT, color="white", size=30)),
-                tickfont=dict(family=FONT, color="white", size=24),
+                title=dict(text="Age (years)", font=dict(family=FONT, color="white", size=fs(30))),
+                tickfont=dict(family=FONT, color="white", size=fs(24)),
                 thickness=30, len=0.6,
             ),
             lighting=dict(ambient=0.4, diffuse=0.8, specular=0.3,
@@ -120,15 +173,14 @@ if os.path.exists(coords_path) and os.path.exists(ages_path):
                        title=dict(text="UMAP 2",      font=_title_font())),
             zaxis=dict(**AXIS_STYLE, showticklabels=True, nticks=4,
                        range=[zlo, zhi],
-                       tickfont=dict(family=FONT, color="rgba(160,160,220,0.65)", size=20),
+                       tickfont=dict(family=FONT, color="rgba(160,160,220,0.65)", size=fas(20)),
                        title=dict(text="Age (years)", font=_title_font())),
             bgcolor=BG,
             aspectmode="cube",
             camera=dict(eye=dict(x=1.3, y=1.3, z=0.9)),
         ),
         paper_bgcolor=BG,
-        title=dict(text="Aging Manifold — Latent Space Terrain",
-                   font=dict(family=FONT, color="white", size=52), x=0.5, y=0.97),
+        title=_fit_plotly_title("Aging Manifold — Latent Space Terrain"),
         margin=dict(l=0, r=0, t=130, b=0),
         width=2400, height=2400,
     )
@@ -140,6 +192,7 @@ else:
 # FIGURE D — Brain MRI 3D Render (PyVista)
 # ══════════════════════════════════════════════════════════════════════════════
 print("\n=== Figure D: Brain MRI ===")
+data = None
 try:
     import pyvista as pv
     import nibabel as nib
@@ -205,41 +258,77 @@ except Exception as e:
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
 
-    fig = plt.figure(figsize=(16, 16), facecolor=BG)
-    ax  = fig.add_subplot(111, projection="3d", facecolor=BG)
+    if data is None:
+        try:
+            import nibabel as nib
+            ixi_dir = os.path.join(ROOT, "data/raw/ixi/T1")
+            nii_files = sorted(f for f in os.listdir(ixi_dir) if f.endswith(".nii.gz"))
+            nii_path = os.path.join(ixi_dir, nii_files[0])
+            img = nib.load(nii_path)
+            data = img.get_fdata().astype(np.float32)
+            print(f"  Loaded fallback volume: {nii_files[0]}  shape={data.shape}")
+        except Exception as load_err:
+            print(f"  Fallback data load failed: {load_err}")
 
-    # Show three orthogonal slices
-    s = data.shape
-    cx, cy, cz = s[0]//2, s[1]//2, s[2]//2
+    if data is not None:
+        fig = plt.figure(figsize=(16, 16), facecolor=BG)
+        ax  = fig.add_subplot(111, projection="3d", facecolor=BG)
 
-    # Sagittal slice (x = mid)
-    Y, Z = np.meshgrid(np.arange(s[1]), np.arange(s[2]))
-    X = np.full_like(Y, cx)
-    ax.plot_surface(X, Y, Z,
-                    facecolors=plt.cm.gray(data[cx, :, :].T / data.max()),
-                    alpha=0.6, shade=False)
+        # Denoise + robust intensity scaling for cleaner slice texture.
+        nz = data[data > 0]
+        if nz.size > 0:
+            lo, hi = np.percentile(nz, (2.0, 99.5))
+        else:
+            lo, hi = float(data.min()), float(data.max())
+        vol = np.clip(data, lo, hi)
+        vol = (vol - lo) / max(hi - lo, 1e-6)
+        vol = gaussian_filter(vol, sigma=0.9)
+        vol = np.clip(vol, 0.0, 1.0) ** 0.9
 
-    # Coronal slice (y = mid)
-    X2, Z2 = np.meshgrid(np.arange(s[0]), np.arange(s[2]))
-    Y2 = np.full_like(X2, cy)
-    ax.plot_surface(X2, Y2, Z2,
-                    facecolors=plt.cm.gray(data[:, cy, :].T / data.max()),
-                    alpha=0.6, shade=False)
+        # Show three orthogonal slices
+        s = vol.shape
+        cx, cy, cz = s[0]//2, s[1]//2, s[2]//2
 
-    # Axial slice (z = mid)
-    X3, Y3 = np.meshgrid(np.arange(s[0]), np.arange(s[1]))
-    Z3 = np.full_like(X3, cz)
-    ax.plot_surface(X3, Y3, Z3,
-                    facecolors=plt.cm.gray(data[:, :, cz].T / data.max()),
-                    alpha=0.6, shade=False)
+        # Sagittal slice (x = mid)
+        Y, Z = np.meshgrid(np.arange(s[1]), np.arange(s[2]))
+        X = np.full_like(Y, cx)
+        ax.plot_surface(X, Y, Z,
+                        facecolors=plt.cm.gray(vol[cx, :, :].T),
+                        alpha=0.82, shade=False, linewidth=0, antialiased=False)
 
-    ax.set_axis_off()
-    ax.set_title("Brain MRI — Orthogonal Slices", color="white", fontsize=20, pad=10)
-    plt.tight_layout()
-    plt.savefig(os.path.join(OUTDIR, "fig_D_brain_render.png"),
-                dpi=150, bbox_inches="tight", facecolor=BG)
-    plt.close()
-    print("  Saved fig_D_brain_render.png (matplotlib fallback)")
+        # Coronal slice (y = mid)
+        X2, Z2 = np.meshgrid(np.arange(s[0]), np.arange(s[2]))
+        Y2 = np.full_like(X2, cy)
+        ax.plot_surface(X2, Y2, Z2,
+                        facecolors=plt.cm.gray(vol[:, cy, :].T),
+                        alpha=0.82, shade=False, linewidth=0, antialiased=False)
+
+        # Axial slice (z = mid)
+        X3, Y3 = np.meshgrid(np.arange(s[0]), np.arange(s[1]))
+        Z3 = np.full_like(X3, cz)
+        ax.plot_surface(X3, Y3, Z3,
+                        facecolors=plt.cm.gray(vol[:, :, cz].T),
+                        alpha=0.82, shade=False, linewidth=0, antialiased=False)
+
+        ax.set_box_aspect((s[0], s[1], s[2]))
+        ax.view_init(elev=24, azim=35)
+        ax.set_axis_off()
+        title_family = FONT.split(",")[0].strip().strip("'").strip('"')
+        title_text, title_size = _fit_mpl_title("Brain MRI — Orthogonal Slices")
+        ax.set_title(
+            title_text,
+            color="white",
+            fontsize=title_size,
+            fontfamily=title_family,
+            pad=10,
+        )
+        fig.subplots_adjust(top=0.86)
+        plt.savefig(os.path.join(OUTDIR, "fig_D_brain_render.png"),
+                    dpi=220, bbox_inches="tight", facecolor=BG)
+        plt.close()
+        print("  Saved fig_D_brain_render.png (matplotlib fallback)")
+    else:
+        print("  SKIP: fig_D_brain_render.png (could not load MRI volume)")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # FIGURE G — Gene Attribution 3D Landscape
@@ -295,8 +384,8 @@ fig_G = go.Figure(data=[
         cmin=-z_abs_max, cmax=z_abs_max,
         showscale=True,
         colorbar=dict(
-            title=dict(text="Attribution Score", font=dict(family=FONT, color="white", size=30)),
-            tickfont=dict(family=FONT, color="white", size=24),
+            title=dict(text="Attribution Score", font=dict(family=FONT, color="white", size=fs(30))),
+            tickfont=dict(family=FONT, color="white", size=fs(24)),
             thickness=30, len=0.6,
         ),
         lighting=dict(ambient=0.5, diffuse=0.7, specular=0.4,
@@ -313,27 +402,26 @@ fig_G.update_layout(
                    showticklabels=True,
                    ticktext=organs, tickvals=list(range(len(organs))),
                    range=[-0.5, len(organs) - 0.5],
-                   tickfont=dict(family=FONT, color="rgba(200,200,255,0.85)", size=22),
+                   tickfont=dict(family=FONT, color="rgba(200,200,255,0.85)", size=fas(22)),
                    title=dict(text="Organ", font=_title_font())),
         yaxis=dict(**AXIS_STYLE,
                    showticklabels=True,
                    ticktext=genes[::-1], tickvals=list(range(len(genes))),
                    range=[-0.5, len(genes) - 0.5],
-                   tickfont=dict(family=FONT, color="rgba(200,200,255,0.85)", size=16),
+                   tickfont=dict(family=FONT, color="rgba(200,200,255,0.85)", size=fas(16)),
                    title=dict(text="Gene", font=_title_font())),
         zaxis=dict(**AXIS_STYLE,
                    showticklabels=True,
                    nticks=4,
                    range=[-z_abs_max * 1.05, z_abs_max * 1.05],
-                   tickfont=dict(family=FONT, color="rgba(200,200,255,0.85)", size=20),
+                   tickfont=dict(family=FONT, color="rgba(200,200,255,0.85)", size=fas(20)),
                    title=dict(text="Score", font=_title_font())),
         bgcolor=BG,
         aspectmode="cube",
         camera=dict(eye=dict(x=1.6, y=1.6, z=1.0)),
     ),
     paper_bgcolor=BG,
-    title=dict(text="Gene Attribution Landscape (v4.5)",
-               font=dict(family=FONT, color="white", size=52), x=0.5, y=0.97),
+    title=_fit_plotly_title("Gene Attribution Landscape (v4.5)"),
     margin=dict(l=0, r=0, t=130, b=0),
     width=2400, height=2400,
 )

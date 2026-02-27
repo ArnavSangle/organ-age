@@ -26,6 +26,49 @@ os.makedirs(CACHEDIR, exist_ok=True)
 # ── Dark-theme layout template ────────────────────────────────────────────────
 BG   = "#0f0f1a"
 FONT = "Georgia, 'Times New Roman', serif"
+TEXT_SCALE = 2.2
+AXIS_TEXT_SCALE = TEXT_SCALE / 2.0
+
+def fs(px):
+    """Scale font sizes for poster readability without changing figure geometry."""
+    return int(round(px * TEXT_SCALE))
+
+def fas(px):
+    """Axis text/ticks should be smaller than titles/legends."""
+    return int(round(px * AXIS_TEXT_SCALE))
+
+def _split_title_lines(text, max_chars=80):
+    if len(text) <= max_chars:
+        return [text]
+    if " — " in text:
+        left, right = text.split(" — ", 1)
+        if max(len(left), len(right)) <= (max_chars - 8):
+            return [left, right]
+    mid = len(text) // 2
+    cut = text.rfind(" ", 0, mid)
+    if cut == -1:
+        cut = text.find(" ", mid)
+    if cut == -1:
+        return [text]
+    return [text[:cut], text[cut + 1:]]
+
+def _fit_plotly_title(text, base_px=52, min_px=18):
+    lines = _split_title_lines(text)
+    longest = max(len(line) for line in lines)
+    line_count = len(lines)
+    max_by_width = int(2100 / max(0.56 * longest, 1.0))
+    max_by_margin = int(115 / (1.22 * line_count))
+    size = min(fs(base_px), max_by_width, max_by_margin)
+    size = max(size, fs(min_px))
+    return dict(
+        text="<br>".join(lines),
+        font=dict(family=FONT, color="white", size=size),
+        x=0.5,
+        y=0.975,
+        xanchor="center",
+        yanchor="top",
+        automargin=True,
+    )
 
 MOD_COLORS = {"rna": "#B45309", "xray": "#3B82F6", "mri": "#0F766E"}
 MOD_NAMES  = {"rna": "RNA (GTEx)", "xray": "X-ray (CheXpert)", "mri": "MRI (IXI)"}
@@ -50,7 +93,7 @@ def _axis_base(rng=None):
 
 def dark_scene(xr=None, yr=None, zr=None):
     """3D scene dict with optional fixed ranges per axis."""
-    title_font = dict(family=FONT, color="rgba(160,160,220,0.8)", size=28)
+    title_font = dict(family=FONT, color="rgba(160,160,220,0.8)", size=fas(28))
     return dict(
         xaxis=dict(**_axis_base(xr), title=dict(text="UMAP 1", font=title_font)),
         yaxis=dict(**_axis_base(yr), title=dict(text="UMAP 2", font=title_font)),
@@ -67,14 +110,14 @@ def base_layout(title, xr=None, yr=None, zr=None):
         plot_bgcolor=BG,
         font=dict(family=FONT),
         legend=dict(
-            font=dict(family=FONT, color="white", size=38),
+            font=dict(family=FONT, color="white", size=fs(38)),
             bgcolor="rgba(15,15,30,0.7)",
             bordercolor="rgba(100,100,180,0.4)",
             borderwidth=2,
             itemsizing="constant",
             tracegroupgap=12,
         ),
-        title=dict(text=title, font=dict(family=FONT, color="white", size=52), x=0.5, y=0.97),
+        title=_fit_plotly_title(title),
         margin=dict(l=0, r=0, t=130, b=0),
         width=2400, height=2400,
     )
@@ -189,8 +232,8 @@ fig_B = go.Figure(data=[go.Scatter3d(
     marker=dict(
         size=1.8, color=ages, colorscale="Plasma", opacity=0.75,
         colorbar=dict(
-            title=dict(text="Age (years)", font=dict(family=FONT, color="white", size=30)),
-            tickfont=dict(family=FONT, color="white", size=24),
+            title=dict(text="Age (years)", font=dict(family=FONT, color="white", size=fs(30))),
+            tickfont=dict(family=FONT, color="white", size=fs(24)),
             thickness=30, len=0.6,
         ),
     ),
