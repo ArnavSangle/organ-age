@@ -431,26 +431,29 @@ def fig_conceptual_overview(out_path: str) -> None:
             zorder=2,
         )
 
-    # ── Geometry (horizontal) ──────────────────────────────────────────────────
+    # ── Geometry (horizontal, evenly spaced) ──────────────────────────────────
+    # GAP = 0.075 between every pair of adjacent box edges throughout
+    # Box widths: BW_s=0.14, BW_s=0.14, ALN_W=0.13, FUS_W=0.13, OUT≈0.12
+    # Centres computed so right_edge_i + GAP = left_edge_{i+1}
+    GAP   = 0.075
+
+    BW_s  = 0.14   # small box width  (input / encoder)
+    BH_s  = 0.15   # small box height
+    ALN_W = 0.13   # alignment box width
+    ALN_H = 0.70   # alignment box height (spans all three rows)
+    FUS_W = 0.13   # fusion box width
+    FUS_H = 0.56   # fusion box height
+
+    x_inp = 0.02 + BW_s / 2                               # ≈ 0.090
+    x_enc = x_inp + BW_s / 2 + GAP + BW_s / 2            # ≈ 0.305
+    x_aln = x_enc + BW_s / 2 + GAP + ALN_W / 2           # ≈ 0.515
+    x_fus = x_aln + ALN_W / 2 + GAP + FUS_W / 2          # ≈ 0.720
+    x_out = x_fus + FUS_W / 2 + GAP + 0.06               # ≈ 0.920 (text centre)
+
     # Three modality rows
     y_rna  = 0.77
     y_xray = 0.50
     y_mri  = 0.23
-
-    # Column x-centres
-    x_inp = 0.11   # input data
-    x_enc = 0.30   # encoders
-    x_aln = 0.55   # contrastive alignment (tall)
-    x_fus = 0.76   # fusion transformer (tall)
-
-    BW_s  = 0.16   # small box width  (input / encoder)
-    BH_s  = 0.15   # small box height
-
-    ALN_W = 0.14   # alignment box width
-    ALN_H = 0.70   # alignment box height (spans all three rows)
-
-    FUS_W = 0.14   # fusion box width
-    FUS_H = 0.56   # fusion box height
 
     # ── Input data boxes (left column, stacked) ───────────────────────────────
     box(x_inp, y_rna,  BW_s, BH_s, "GTEx  RNA-seq\n7,378 samples",      "#EEF2FF")
@@ -473,7 +476,7 @@ def fig_conceptual_overview(out_path: str) -> None:
         "#FEE2E2")
 
     # ── Output annotation (right side) ────────────────────────────────────────
-    ax.text(0.925, y_xray,
+    ax.text(x_out, y_xray,
             "Organ-Age\nPrediction\n"
             "$\\mu \\pm \\sigma$\n"
             "$\\Delta = \\hat{y} - y_{\\mathrm{chrono}}$",
@@ -481,7 +484,7 @@ def fig_conceptual_overview(out_path: str) -> None:
             color=slate, style="italic", multialignment="center",
             linespacing=1.6)
 
-    # ── Arrows: input → encoder (horizontal per row) ──────────────────────────
+    # ── Arrows: input → encoder (horizontal per row, equal gap) ───────────────
     for yr in (y_rna, y_xray, y_mri):
         arrow(x_inp + BW_s / 2, yr, x_enc - BW_s / 2, yr)
 
@@ -493,7 +496,7 @@ def fig_conceptual_overview(out_path: str) -> None:
     arrow(x_aln + ALN_W / 2, y_xray, x_fus - FUS_W / 2, y_xray)
 
     # ── Arrow: fusion → output ────────────────────────────────────────────────
-    arrow(x_fus + FUS_W / 2, y_xray, 0.875, y_xray)
+    arrow(x_fus + FUS_W / 2, y_xray, x_out - 0.06, y_xray)
 
     _savefig(out_path, dpi=100)
 

@@ -109,7 +109,7 @@ def radar_plot(organs, values, outpath):
     values += values[:1]  # close loop
     angles += angles[:1]
 
-    fig = plt.figure(figsize=(7, 7))
+    fig = plt.figure(figsize=(8, 8))
     ax = plt.subplot(111, polar=True)
 
     ax.plot(angles, values, linewidth=2, color="#0F766E")
@@ -117,9 +117,11 @@ def radar_plot(organs, values, outpath):
 
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(organs)
+    ax.tick_params(pad=18)   # push organ labels outward so they don't crowd the spokes
     ax.set_yticklabels([])
 
-    ax.set_title("Organ Z-Score Profile (Calibrated)", pad=18)
+    ax.set_title("Organ Z-Score Profile (Calibrated)", pad=28)
+    fig.subplots_adjust(top=0.88)
     plt.savefig(outpath, dpi=300, bbox_inches='tight')
     plt.close()
 
@@ -173,7 +175,7 @@ def ci_plot(chrono_age, organs, cal_ages, ci_low, ci_high, outpath):
     outpath : Path
         Destination path for the saved PNG figure.
     """
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(9, 5))
 
     y = np.arange(len(organs))
 
@@ -196,7 +198,8 @@ def ci_plot(chrono_age, organs, cal_ages, ci_low, ci_high, outpath):
     ax.set_yticklabels(organs)
     ax.set_xlabel("Age (years)")
     ax.set_title("Calibrated Organ Ages with 95% CI")
-    ax.legend()
+    # Place legend outside the axes so it never overlaps data
+    ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), borderaxespad=0, frameon=True)
 
     plt.tight_layout()
     plt.savefig(outpath, dpi=300, bbox_inches='tight')
