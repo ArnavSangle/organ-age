@@ -16,11 +16,13 @@ from scipy.ndimage import gaussian_filter
 
 warnings.filterwarnings("ignore")
 
-ROOT    = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-OUTDIR  = os.path.join(ROOT, "figures", "poster")
-HTMLDIR = os.path.join(OUTDIR, "html")
-os.makedirs(OUTDIR,  exist_ok=True)
-os.makedirs(HTMLDIR, exist_ok=True)
+ROOT     = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+OUTDIR   = os.path.join(ROOT, "figures", "poster")
+HTMLDIR  = os.path.join(OUTDIR, "html")
+CACHEDIR = os.path.join(OUTDIR, "cache")
+os.makedirs(OUTDIR,   exist_ok=True)
+os.makedirs(HTMLDIR,  exist_ok=True)
+os.makedirs(CACHEDIR, exist_ok=True)
 
 BG   = "#0f0f1a"
 FONT = "Georgia, 'Times New Roman', serif"
@@ -53,8 +55,8 @@ def save(fig, stem):
 # ══════════════════════════════════════════════════════════════════════════════
 print("\n=== Figure E: Aging Terrain ===")
 
-coords_path = os.path.join(OUTDIR, "_coords_aligned.npy")
-ages_path   = os.path.join(OUTDIR, "_ages.npy")
+coords_path = os.path.join(CACHEDIR, "_coords_aligned.npy")
+ages_path   = os.path.join(CACHEDIR, "_ages.npy")
 
 if os.path.exists(coords_path) and os.path.exists(ages_path):
     coords_a = np.load(coords_path)

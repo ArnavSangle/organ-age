@@ -15,11 +15,13 @@ import pandas as pd
 import plotly.graph_objects as go
 import umap as umap_lib
 
-ROOT    = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-OUTDIR  = os.path.join(ROOT, "figures", "poster")
-HTMLDIR = os.path.join(OUTDIR, "html")
-os.makedirs(OUTDIR,  exist_ok=True)
-os.makedirs(HTMLDIR, exist_ok=True)
+ROOT     = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+OUTDIR   = os.path.join(ROOT, "figures", "poster")
+HTMLDIR  = os.path.join(OUTDIR, "html")
+CACHEDIR = os.path.join(OUTDIR, "cache")
+os.makedirs(OUTDIR,   exist_ok=True)
+os.makedirs(HTMLDIR,  exist_ok=True)
+os.makedirs(CACHEDIR, exist_ok=True)
 
 # ── Dark-theme layout template ────────────────────────────────────────────────
 BG   = "#0f0f1a"
@@ -218,7 +220,7 @@ fig_C = go.Figure(data=traces_C, layout=base_layout(
 save(fig_C, "fig_C_umap_aligned_modality")
 
 # ── Save UMAP coords for Figure E ─────────────────────────────────────────────
-np.save(os.path.join(OUTDIR, "_coords_aligned.npy"), coords_a)
-np.save(os.path.join(OUTDIR, "_ages.npy"), ages)
+np.save(os.path.join(CACHEDIR, "_coords_aligned.npy"), coords_a)
+np.save(os.path.join(CACHEDIR, "_ages.npy"), ages)
 print("Saved aligned coords + ages for Figure E.")
 print(f"\nAll UMAP figures done in {time.time()-t0:.0f}s total.")
