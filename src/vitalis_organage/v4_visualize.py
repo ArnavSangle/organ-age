@@ -18,7 +18,29 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
+
+# Match PAPER_STYLE from figlib.py — serif font, publication-legible sizes
+matplotlib.rcParams.update({
+    "font.family":       "serif",
+    "font.serif":        ["DejaVu Serif", "Georgia", "Times New Roman", "serif"],
+    "mathtext.fontset":  "dejavuserif",
+    "font.size":          16,
+    "axes.titlesize":     19,
+    "axes.labelsize":     17,
+    "xtick.labelsize":    15,
+    "ytick.labelsize":    15,
+    "legend.fontsize":    14,
+    "figure.titlesize":   20,
+    "axes.titlepad":      10,
+    "axes.labelpad":       8,
+    "axes.linewidth":      1.2,
+    "xtick.major.width":   1.1,
+    "ytick.major.width":   1.1,
+    "xtick.major.size":    5.0,
+    "ytick.major.size":    5.0,
+})
 
 
 # -----------------------------
@@ -94,10 +116,10 @@ def radar_plot(organs, values, outpath):
     ax.fill(angles, values, alpha=0.20, color="#0F766E")
 
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(organs, fontsize=9)
+    ax.set_xticklabels(organs)
     ax.set_yticklabels([])
 
-    ax.set_title("Organ Z-Score Profile (Calibrated)", fontsize=13, pad=18)
+    ax.set_title("Organ Z-Score Profile (Calibrated)", pad=18)
     plt.savefig(outpath, dpi=300, bbox_inches='tight')
     plt.close()
 
@@ -119,11 +141,11 @@ def delta_bar_plot(organs, deltas, outpath):
         Destination path for the saved PNG figure.
     """
     fig, ax = plt.subplots(figsize=(10, 6))
-    bars = ax.bar(organs, deltas, color=["#1f77b4" if d < 0 else "#d62728" for d in deltas])
+    bars = ax.bar(organs, deltas, color=["#0F766E" if d < 0 else "#B45309" for d in deltas])
 
-    ax.axhline(0, color='black', linewidth=1)
-    ax.set_ylabel("Δ (Organ Age – Chronological Age)", fontsize=12)
-    ax.set_title("Organ Age Deltas", fontsize=16)
+    ax.axhline(0, color="#334155", linewidth=1)
+    ax.set_ylabel("Δ (Organ Age – Chronological Age)")
+    ax.set_title("Organ Age Deltas")
     plt.xticks(rotation=45, ha="right")
 
     plt.savefig(outpath, dpi=300, bbox_inches='tight')
@@ -171,10 +193,10 @@ def ci_plot(chrono_age, organs, cal_ages, ci_low, ci_high, outpath):
     ax.axvline(chrono_age, color="#B45309", linestyle="--", linewidth=2, label="Chronological age")
 
     ax.set_yticks(y)
-    ax.set_yticklabels(organs, fontsize=10)
-    ax.set_xlabel("Age (years)", fontsize=11)
-    ax.set_title("Calibrated Organ Ages with 95% CI", fontsize=13)
-    ax.legend(fontsize=9)
+    ax.set_yticklabels(organs)
+    ax.set_xlabel("Age (years)")
+    ax.set_title("Calibrated Organ Ages with 95% CI")
+    ax.legend()
 
     plt.tight_layout()
     plt.savefig(outpath, dpi=300, bbox_inches='tight')
