@@ -1,0 +1,101 @@
+{
+  "overall": {
+    "MAE": 9.413,
+    "CI_lower": 9.38,
+    "CI_upper": 9.445,
+    "r": 0.7381,
+    "r_pvalue": 0.0
+  },
+  "per_modality": {
+    "rna": {
+      "MAE": 15.509,
+      "CI_lower": 15.241,
+      "CI_upper": 15.782,
+      "r": -0.0009,
+      "r_pvalue": 0.9376743673662004,
+      "N": 7378
+    },
+    "xray": {
+      "MAE": 9.185,
+      "CI_lower": 9.153,
+      "CI_upper": 9.216,
+      "r": 0.7602,
+      "r_pvalue": 0.0,
+      "N": 187825
+    },
+    "mri": {
+      "MAE": 5.588,
+      "CI_lower": 5.221,
+      "CI_upper": 5.964,
+      "r": 0.9086,
+      "r_pvalue": 6.327387279265274e-215,
+      "N": 563
+    }
+  },
+  "per_organ": {
+    "brain": {
+      "MAE": 5.008,
+      "CI_lower": 4.676,
+      "CI_upper": 5.347,
+      "N": 563,
+      "mean_delta": 0.0,
+      "median_delta": 0.31,
+      "wilcoxon_stat": 77650.0,
+      "wilcoxon_p": 0.7605598421113047,
+      "delta_significant": false
+    },
+    "brain_cortex": {
+      "MAE": 7.952,
+      "CI_lower": 7.241,
+      "CI_upper": 8.724,
+      "N": 270,
+      "mean_delta": 0.0,
+      "median_delta": -5.679,
+      "wilcoxon_stat": 12796.0,
+      "wilcoxon_p": 5.086195523541385e-05,
+      "delta_significant": true
+    },
+    "heart": {
+      "MAE": 8.187,
+      "CI_lower": 7.729,
+      "CI_upper": 8.648,
+      "N": 913,
+      "mean_delta": -0.0,
+      "median_delta": 0.256,
+      "wilcoxon_stat": 206312.0,
+      "wilcoxon_p": 0.815663541593876,
+      "delta_significant": false
+    },
+    "lung": {
+      "MAE": 15.496,
+      "CI_lower": 15.449,
+      "CI_upper": 15.543,
+      "N": 188429,
+      "mean_delta": -6.934,
+      "median_delta": -7.935,
+      "wilcoxon_stat": 5016142386.5,
+      "wilcoxon_p": 0.0,
+      "delta_significant": true
+    }
+  },
+  "pairwise_organ": {
+    "brain_vs_lung": {
+      "MAE_diff": -10.487,
+      "CI_lower": -10.823,
+      "CI_upper": -10.135,
+      "significant": true
+    },
+    "brain_vs_heart": {
+      "MAE_diff": -3.179,
+      "CI_lower": -3.74,
+      "CI_upper": -2.607,
+      "significant": true
+    },
+    "heart_vs_lung": {
+      "MAE_diff": -7.309,
+      "CI_lower": -7.77,
+      "CI_upper": -6.834,
+      "significant": true
+    }
+  }
+}

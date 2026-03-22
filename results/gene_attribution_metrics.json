@@ -1,0 +1,22 @@
+{
+  "top5_concentration_pct": {
+    "liver": 28.38,
+    "kidney": 28.17,
+    "brain_cortex": 28.44,
+    "heart": 28.41
+  },
+  "shared_in_all_4_organs": [
+    "gene_202",
+    "gene_394",
+    "gene_891",
+    "gene_919",
+    "gene_931"
+  ],
+  "n_shared_in_all": 5,
+  "n_unique_per_organ": {
+    "liver": 6,
+    "kidney": 5,
+    "brain_cortex": 4,
+    "heart": 3
+  }
+}

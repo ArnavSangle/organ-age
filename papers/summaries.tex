@@ -1,0 +1,296 @@
+\documentclass[11pt]{article}
+
+\usepackage[left=1in, right=1in, top=1in, bottom=1in]{geometry}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{microtype}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+
+% ---- Colors ----
+\definecolor{L1color}{HTML}{0F766E}
+\definecolor{L2color}{HTML}{B45309}
+\definecolor{L3color}{HTML}{2563EB}
+\definecolor{CScolor}{HTML}{4B5563}
+\definecolor{fillL1}{HTML}{E6FFFB}
+\definecolor{fillL2}{HTML}{FFEDD5}
+\definecolor{fillL3}{HTML}{EFF6FF}
+\definecolor{fillCS}{HTML}{F1F5F9}
+
+% ---- tcolorbox styles ----
+\tcbset{
+  base/.style={
+    enhanced,
+    left=10pt, right=10pt, top=8pt, bottom=8pt,
+    before skip=6pt, after skip=6pt,
+    fontupper=\normalsize
+  },
+  L1box/.style={base, breakable, colframe=L1color, colback=fillL1, boxrule=1.2pt},
+  L2box/.style={base, breakable, colframe=L2color, colback=fillL2, boxrule=1.2pt},
+  L3box/.style={base, breakable, colframe=L3color, colback=fillL3, boxrule=1.2pt},
+  CSbox/.style={base, colframe=CScolor, colback=fillCS, boxrule=1.2pt},
+}
+
+% ---- Section formatting ----
+\titleformat{\section}[block]{\large\bfseries}{}{0em}{}[\vspace{-0.3em}\rule{\linewidth}{0.8pt}]
+\titleformat{\subsection}[block]{\normalsize\bfseries\itshape}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.2em}{0.5em}
+\titlespacing*{\subsection}{0pt}{0.8em}{0.3em}
+
+
+\hypersetup{colorlinks=true, linkcolor=L3color, urlcolor=L3color}
+
+\begin{document}
+
+% ================================================================
+% TITLE
+% ================================================================
+\begin{center}
+  {\LARGE\bfseries Organ-Age: Project Summaries}\\[0.4em]
+  {\large Arnav Sangle \quad $\cdot$ \quad DRSEF 2025}\\[0.2em]
+  {\small Three audiences, one project --- layperson through expert}
+\end{center}
+
+\vspace{0.5em}
+\noindent\rule{\linewidth}{1pt}
+\vspace{0.3em}
+
+% ================================================================
+% LEVEL 1
+% ================================================================
+\section{\textcolor{L1color}{Level 1 \textnormal{---} General Audience}}
+
+\begin{tcolorbox}[L1box]
+
+Your body doesn't age all at once. Your lungs might be getting older faster than your brain. Your heart could be biologically younger than what your driver's license says. But almost every tool doctors have for estimating ``biological age'' gives you a single number for your whole body, based on just one type of measurement. That's like rating the health of an entire city by sampling one block.
+
+\textbf{Organ-Age} fixes this by reading three completely different windows into the body simultaneously. In machine learning, we call each window a \textit{modality} --- a distinct type of data. This project uses three: gene activity levels read from tissue samples (RNA-seq from GTEx, a public database of 7,378 samples spanning 54 tissue types), chest X-rays that reveal what your heart and lungs look like structurally (CheXpert, 187,825 radiographs from Stanford), and 3D brain scans that capture how your brain volume has changed with age (MRI from IXI, 563 subjects from London hospitals). Each modality sees a different face of aging --- none of them alone tells the whole story.
+
+\subsection{How the machine learns}
+
+Each modality gets its own specialized reader network --- an \textit{encoder} --- trained to compress its data into a compact fingerprint. Think of an encoder like a translator: it takes a chest X-ray (tens of thousands of pixel values) and distills it into a list of 128 numbers that captures the most important aging signals. That list is called an \textit{embedding}. Similarly, the RNA encoder turns thousands of gene activity measurements into 128 numbers, and the MRI encoder does the same for a full 3D brain scan.
+
+The hard part: these three datasets come from completely different hospitals and patients, with zero overlap in who's in them. You can't just glue the fingerprints together because they don't speak the same language --- a 40-year-old's gene fingerprint and a 40-year-old's X-ray fingerprint land in completely different mathematical regions. This is where \textit{contrastive alignment} comes in. It's a training technique that teaches all three fingerprints to land near each other in a shared space if they belong to people of similar ages --- even if those people are from different datasets. The mathematical compass it uses is called InfoNCE loss, and it works by rewarding the model whenever it places same-age fingerprints close together and penalizing it whenever it places them far apart.
+
+To store and move the large preprocessed datasets between steps efficiently, the pipeline uses a file format called \textit{Parquet} --- a kind of super-efficient spreadsheet that lets the code load only the columns it needs without reading the entire file every time, which is crucial when working with hundreds of thousands of rows of gene expression data.
+
+Once the fingerprints are speaking the same language, a \textit{fusion transformer} combines them. ``Fusion'' means combining; a transformer is a type of AI (the same architecture behind ChatGPT) that's exceptionally good at figuring out how pieces of information relate to each other. Rather than just averaging the three fingerprints together, it uses a mechanism called \textit{attention} to ask: ``Given what the X-ray says, how much should I adjust for what the gene data says?'' The result is a smarter, weighted combination that adapts to each individual sample.
+
+\subsection{What the graphs show}
+
+The \textbf{UMAP plots} (the 3D colored point clouds) are the clearest evidence that the approach works. UMAP is a technique that takes the 128-number fingerprints and squashes them to 3 numbers so they can be drawn as dots in space --- nearby dots mean similar fingerprints. Before alignment, you see three separate blobs: genes in one corner, X-rays in another, brain scans in a third. After alignment, those three blobs dissolve into a single continuous cloud, and the color of each dot (which represents age) flows smoothly from one end to the other. Age has become the organizing principle, not data type.
+
+The \textbf{prediction scatter plot} puts a dot for each of the 190,000+ samples, comparing the model's predicted biological age to the person's real age. A perfect model would produce a straight diagonal line. The model achieves a mean absolute error (MAE) of about 9.3 years --- meaning on average it's off by 9.3 years in either direction, which is competitive for a problem this hard.
+
+The \textbf{organ overlay panel} shows four side-by-side mini-graphs for brain, brain cortex, heart, and lung. Each has three views: predicted vs.\ real age, the gap between them vs.\ real age, and the distribution of those gaps across people. Brain is tight and consistent; lung is wide and noisy. This 2.7$\times$ difference in spread between organs is the core finding --- each organ has its own aging fingerprint invisible in a single-number clock.
+
+The \textbf{individual report} for a real subject (patient GTEX-1117F, chronological age 64.5) shows horizontal bars for each organ showing how biologically young or old that organ appears, with error bars showing uncertainty. All bars point left (younger), and a web-shaped radar chart collapses the same data into a polygon --- a small, uniform polygon means the whole body is aging slowly and consistently.
+
+\subsection{Bottom line}
+
+Biological age is not one number. It's a different number for every organ, and those numbers diverge in ways that are biologically meaningful --- and now, for the first time, measurable together from three data types that previously couldn't be combined.
+
+\end{tcolorbox}
+
+\newpage
+
+% ================================================================
+% LEVEL 2
+% ================================================================
+\section{\textcolor{L2color}{Level 2 \textnormal{---} Science Fair Judge / Informed Non-Expert}}
+
+\begin{tcolorbox}[L2box]
+
+Most biological age predictors --- epigenetic clocks like Horvath's clock, PhenoAge, GrimAge --- produce a single organism-wide number from one \textit{modality} (one type of data). A modality is a data source with its own structure and statistical properties that requires a distinct processing architecture. RNA sequencing is tabular (thousands of gene-expression values per tissue sample); chest X-rays are 2D images; brain MRI is a 3D volumetric scan. Each captures a fundamentally different face of aging, and no single modality can see all of it.
+
+\textbf{Organ-Age} builds a pipeline that processes all three simultaneously to produce per-organ age predictions with calibrated uncertainty. The training data are three publicly available datasets with zero subject overlap: GTEx v10 RNA-seq (7,378 samples, 54 tissues), CheXpert chest radiographs (187,825 images), and IXI T1-weighted brain MRI (563 volumes). Because these datasets are large and preprocessed through multiple stages, the pipeline stores intermediate data in \textit{Parquet} format --- a columnar binary file format that allows the training code to load only the specific columns it needs from hundred-thousand-row tables, rather than deserializing entire files into memory on every batch. Think of it as a smart filing cabinet that can retrieve one drawer without opening the rest.
+
+\subsection{Architecture}
+
+Three parallel \textit{encoders} convert each modality into a 128-dimensional \textit{embedding} vector --- a dense numeric fingerprint that the rest of the model can work with. An encoder is a neural network trained to compress its input into a compact representation that preserves the most task-relevant information. The RNA encoder is a 3-layer multilayer perceptron (MLP); the X-ray encoder is a ResNet-18 convolutional network pretrained on ImageNet; the MRI encoder is a 3D Vision Transformer (ViT) that treats the brain volume as a sequence of 3D patches.
+
+The problem is that 128 numbers from an RNA sample and 128 numbers from an X-ray don't naturally land in the same region of mathematical space. Naively concatenating them and asking a model to fuse them produces unstable results --- in ablation experiments (tests where components are systematically removed), this ``naïve fusion'' baseline achieved a mean absolute error (MAE) of 10.88 years, no better than X-ray alone. MAE is simply the average of how many years the prediction is off from the true age, in either direction.
+
+The fix is \textit{contrastive alignment} via InfoNCE loss. InfoNCE is a training objective that uses chronological age as a weak supervisory signal: it pulls embeddings from samples of similar ages closer together in a shared 128-D space, and pushes embeddings from different-age samples apart. The temperature parameter $\tau = 0.07$ controls sharpness --- lower temperature makes the model more aggressively penalize incorrect groupings. Crucially, no paired samples are required; alignment is learned from the statistical structure of age alone across the three independent datasets.
+
+Once aligned, the embeddings are passed as a short token sequence into a \textit{fusion transformer}: a 4-layer transformer encoder with 8 attention heads. A transformer is a neural network built around \textit{self-attention} --- a mechanism that computes, for each token, how much it should be influenced by every other token. In this cross-modal context, the RNA embedding can ``attend'' strongly to the MRI embedding if they are mutually informative, and weakly if they are inconsistent. The resulting fused representation is fed to a regression head that outputs a predicted age $\hat{y}$ and a calibrated uncertainty $\sigma$. The organ-age gap $\Delta = \hat{y} - \text{chronological age}$ is the primary clinical output.
+
+\subsection{What the graphs show}
+
+The \textbf{3D UMAP visualizations} are the diagnostic centerpiece. UMAP (Uniform Manifold Approximation and Projection) is a dimensionality reduction algorithm that projects the 128-D embeddings down to 3D while preserving neighborhood structure, so nearby dots represent similar embeddings. Before alignment: three tight, non-overlapping modality clusters. After alignment: those clusters fully intermingle and a smooth age gradient emerges as the dominant structure, confirming that InfoNCE successfully reorganized the latent space.
+
+The \textbf{aging manifold terrain} renders this same aligned space as a 3D landscape (using kernel density estimation), where the surface height reflects the concentration of samples at each age --- a visual of the age gradient as a mountain range.
+
+The \textbf{ablation table and prediction scatter} quantify the gain: aligned fusion (v3.5) achieves MAE$=9.30$ yr vs.\ naïve concatenation (v3) at 10.88 yr. MSE (mean squared error --- more sensitive to large mistakes than MAE because it squares the errors) dropped from 185.4 to 138.0. MRI benefited most from alignment: MAE fell from 14.93 to 6.21 yr ($-58\%$), because contrastive learning lets the small IXI dataset borrow representational structure from the much larger RNA and X-ray datasets.
+
+The \textbf{per-organ overlay panel} (three views per organ: predicted vs.\ chronological age, age-gap trajectory, age-gap density) shows a 2.7$\times$ range in residual standard deviation across organs --- brain's predictions scatter by 6.5 years; lung's by 17.3 years. This is not measurement error; it reflects genuine biological heterogeneity.
+
+The \textbf{gene attribution landscape} (v4.5) is a 3D surface showing which internal model dimensions most influenced the age predictions for each organ. The surface is notably flat --- attribution is spread broadly, with the top 5 genes accounting for only $\sim$28\% of total attribution mass, suggesting the model integrates signal from many transcriptomic contributors rather than relying on a handful.
+
+The \textbf{individualized report} for subject GTEX-1117F (age 64.5 yr) shows calibrated organ ages with 95\% confidence intervals and a z-score radar. The radar polygon is uniformly inside the normal range for all organs --- this subject is a global slow-ager, not an organ-local outlier.
+
+\subsection{Bottom line}
+
+Contrastive alignment is the key ingredient. It enables reliable fusion of three independent datasets without paired samples, reduces overall MAE by 14.6\% over naïve fusion, and reveals a 2.7$\times$ spread in organ-specific aging rates that would be invisible in any single-modality or organism-wide framework.
+
+\end{tcolorbox}
+
+\newpage
+
+% ================================================================
+% LEVEL 3
+% ================================================================
+\section{\textcolor{L3color}{Level 3 \textnormal{---} Technical / Domain Expert}}
+
+\begin{tcolorbox}[L3box]
+
+\textbf{Organ-Age} is a multimodal biological age estimation framework that addresses two limitations of existing aging clocks: (1) single-\textit{modality} data collapse, and (2) organism-wide prediction that suppresses organ-level heterogeneity. A modality is a data source with a distinct generative process, feature space, and required inductive bias --- RNA-seq (count-based, tabular), chest radiographs (2D spatial), and T1-weighted brain MRI (3D volumetric). The three training datasets --- GTEx v10 ($n=7{,}378$), CheXpert ($n=187{,}825$), and IXI ($n=563$) --- have zero subject overlap, ruling out standard paired-sample multimodal fusion.
+
+\subsection{Data pipeline and storage}
+
+Raw data is preprocessed modality-specifically: RNA-seq counts are variance-stabilized (DESeq2) and batch-corrected (ComBat); radiographs are resized and intensity-normalized; MRI volumes are skull-stripped, intensity-normalized, and nonlinearly registered to MNI space with ANTs. All intermediate representations are stored in \textit{Apache Parquet} --- a columnar binary format with dictionary encoding, RLE, and bit-packing compression. For the GTEx matrix ($\sim$7,400 rows $\times$ 56,200 gene columns), Parquet column projection reduces I/O by $\sim$91\% when loading only the variance-filtered 5,000-gene subset. PyArrow batched reads integrate directly with the PyTorch DataLoader, avoiding full matrix materialization.
+
+\subsection{Encoder architecture}
+
+Three parallel \textit{encoders} ($f_m$) map each modality to a shared-dimensionality \textit{embedding} in $\mathbb{R}^{128}$ (L2-normalized): a 3-layer MLP for RNA (5,000$\to$512$\to$256$\to$128); a ResNet-18 fine-tuned from ImageNet for X-rays (224$\times$224$\to$128 via global average pooling); and a 3D ViT with volumetric patch embedding ($\text{patch\_size}=16^3$, [CLS] token$\to$128) for MRI. An embedding is a dense, task-relevant latent vector in $\mathbb{R}^d$ constituting the information bottleneck: everything the encoder does not preserve is permanently discarded.
+
+\subsection{Contrastive alignment}
+
+Naïve concatenation fails because each encoder's latent geometry is independent. The solution is \textit{InfoNCE}, which maximizes a lower bound on mutual information between positive pairs:
+\[
+\mathcal{L}_{\text{InfoNCE}} = -\log \frac{\exp\!\bigl(\mathrm{sim}(u, u') / \tau\bigr)}{\sum_j \exp\!\bigl(\mathrm{sim}(u, u_j) / \tau\bigr)}
+\]
+where $\mathrm{sim}(\cdot,\cdot)$ is cosine similarity and $\tau = 0.07$. Positives are defined as same-age cross-modal pairs using chronological age as weak supervision --- no per-subject pairing required. Projection heads $g_m$ (2-layer MLP, $128\to128\to128$, L2-normalized) are trained with this loss, pulling the shared latent space into an age-organized manifold.
+
+\subsection{Fusion transformer}
+
+Aligned embeddings $\{z^{(m)}\}$ are concatenated as a token sequence and passed to a 4-layer transformer encoder (8 attention heads, $d_\text{model}=128$, $d_\text{ff}=512$). Self-attention computes:
+\[
+\mathrm{Attention}(Q,K,V) = \mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
+\]
+The \textit{fusion transformer} learns asymmetric inter-modality attention weights rather than a fixed combination rule. The [CLS]-equivalent output is fed to a Gaussian regression head $g_\theta$ producing $(\mu, \log\sigma^2)$, trained with negative log-likelihood:
+\[
+\mathcal{L}_{\text{NLL}} = \tfrac{1}{2}\log\sigma^2 + \frac{(\mu - y)^2}{2\sigma^2}
+\]
+Combined objective: $\mathcal{L} = \lambda_\text{align}\mathcal{L}_\text{InfoNCE} + \lambda_\text{reg}\mathcal{L}_\text{NLL}$. Training is staged: encoder pretraining $\to$ projection head alignment (frozen encoders) $\to$ joint fine-tuning. Post-hoc isotonic calibration corrects regression-to-mean bias.
+
+\subsection{Evaluation and graphs}
+
+\textbf{MAE} (mean absolute error) averages $|\hat{y}-y|$ --- the typical prediction error in years. \textbf{MSE} averages $(\hat{y}-y)^2$ --- more sensitive to large outlier errors. Pearson $r$ measures linear correlation.
+
+The \textbf{3D UMAP visualizations} are the primary latent-geometry diagnostic. UMAP constructs a weighted $k$-NN graph in 128-D and optimizes a 3D layout preserving fuzzy topological structure. Pre-alignment: inter-modality silhouette score is high (modality-separable clusters). Post-alignment: silhouette collapses and age explains the dominant variance axis. The \textbf{aging manifold terrain} renders this as a kernel-density surface colored by age.
+
+The \textbf{ablation table} isolates contrastive alignment's contribution: MAE improves 14.6\% overall, with MRI gaining most ($-58\%$, 14.93$\to$6.21 yr). The \textbf{prediction scatter} confirms $r=0.74$, MAE$=9.30$ yr across $n=195{,}766$ test samples.
+
+The \textbf{per-organ overlay panel} quantifies a 2.7$\times$ range in residual SD (brain: 6.48 yr, lung: 17.29 yr) --- statistically distinguishable organ-level aging trajectories that collapse to zero variance in an organism-wide clock.
+
+The \textbf{gene attribution landscape} (v4.5) maps integrated gradients $\partial\hat{y}/\partial z_\text{RNA}$ across the 256-D RNA latent space and organs as a 3D surface. The near-flat surface confirms diffuse attribution: top-5 latent dimensions capture only 3.6--4.2\% of total IG mass per organ. Shared dimension 114 appears in top-5 for liver, kidney, and brain cortex; organ-preferential dimensions follow a decomposition into weakly shared systemic and tissue-specific programs.
+
+The \textbf{individualized report} for GTEX-1117F shows calibrated $\hat{y}_\text{cal} \pm 1.96\sigma$ per organ (CI plot) and per-organ $z=\Delta/\sigma_\text{organ}$ as a radar polygon. Uniform $z<0$ across all 7 organs (mean $\bar{\Delta}=-10.5$ yr) classifies this subject as a systemic decelerator --- distinct from a single-organ outlier.
+
+\subsection{Bottom line}
+
+InfoNCE contrastive alignment enables reliable fusion of three fully disjoint datasets. The 14.6\% MAE reduction, 2.7$\times$ organ-level SD spread, and per-subject uncertainty-aware panels demonstrate that biological age is better modeled as a distributed, organ-resolved quantity --- and that representation alignment plus attention-based fusion is a viable computational route to measuring it.
+
+\end{tcolorbox}
+
+\newpage
+
+% ================================================================
+% CHEAT SHEET
+% ================================================================
+\section{\textcolor{CScolor}{Quick-Reference Cheat Sheet}}
+
+% --- Box 1: Concepts & Architecture ---
+\begin{tcolorbox}[CSbox]
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash\bfseries}p{0.24\linewidth}>{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Term} & \textbf{What it means} \\
+\midrule
+
+Modality &
+A distinct type of data requiring its own processing approach. Organ-Age has three: RNA-seq (gene activity), chest X-ray (structural image), brain MRI (3D volume scan). Each sees a different face of aging. \\
+
+Encoder &
+A neural network that compresses raw data (e.g., an X-ray image) into a compact numeric fingerprint called an embedding. Organ-Age has one encoder per modality. \\
+
+Embedding &
+A list of 128 numbers that is the encoder's learned summary of its input. Similar inputs produce similar embeddings (nearby in space). Also called a latent vector. \\
+
+Latent space &
+The abstract mathematical space where embeddings live. Before alignment: each modality has its own separate region. After alignment: all three share one organized space. \\
+
+Contrastive alignment &
+A training technique that teaches embeddings from different modalities to cluster by biological age rather than by data source, without requiring matched samples across datasets. \\
+
+InfoNCE &
+The specific loss function used for alignment. Pulls same-age embeddings together, pushes different-age ones apart. Temperature $\tau=0.07$ controls sharpness. \\
+
+Fusion transformer &
+The AI module that combines the three aligned embeddings into one final representation. Uses attention to learn \emph{how much} each modality should influence the output for each sample. \\
+
+Attention &
+A mechanism that computes, for each piece of information, how much it should depend on every other piece. Allows the model to weight modalities adaptively per sample. \\
+
+UMAP &
+A visualization algorithm that squashes 128-D embeddings to 3D while preserving neighborhood structure. Used to show whether alignment worked. \\
+
+Parquet &
+A columnar binary file format for large tables. Lets the pipeline load only the columns it needs (e.g., 5,000 genes out of 56,000) without reading the whole file. Critical for efficiency. \\
+
+\bottomrule
+\end{tabularx}
+\end{tcolorbox}
+
+\vspace{4pt}
+
+% --- Box 2: Metrics & Methods ---
+\begin{tcolorbox}[CSbox]
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash\bfseries}p{0.24\linewidth}>{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Term} & \textbf{What it means} \\
+\midrule
+
+MAE &
+Mean Absolute Error: average of $|\hat{y}-y|$ in years. Organ-Age achieves 9.30 yr. The typical prediction is off by this many years. \\
+
+MSE &
+Mean Squared Error: average of $(\hat{y}-y)^2$. More sensitive to large errors than MAE. Aligned model: 138.0; naïve model: 185.4. \\
+
+Pearson $r$ &
+Correlation between predicted and true ages ($-1$ to $+1$). Organ-Age: $r=0.74$. Measures how well predictions track the trend, independent of absolute error. \\
+
+Organ-age gap ($\Delta$) &
+$\hat{y}_\text{cal} - \text{chronological age}$. Positive = organ appears older than expected; negative = younger. The primary clinical output. \\
+
+Z-score (per organ) &
+$\Delta / \sigma_\text{organ}$. Standardizes the gap by each organ's typical spread, making organs comparable to each other despite different noise levels. \\
+
+Calibration &
+Post-hoc correction (isotonic regression) that removes the regression-to-mean bias: raw predictions compress toward the population mean, so calibration stretches them back. \\
+
+Integrated gradients &
+An interpretability method that traces how much each input feature (gene, latent dimension) contributed to the model's final prediction. Used in v4.5 for gene attribution. \\
+
+Ablation study &
+An experiment where components are systematically removed to measure each one's contribution. Here: unimodal $\to$ naïve fusion $\to$ aligned fusion. \\
+
+Regression-to-mean &
+The tendency of a cohort-trained model to predict ages close to the population mean, under-predicting for young subjects and over-predicting for old ones. \\
+
+\bottomrule
+\end{tabularx}
+\end{tcolorbox}
+
+\end{document}

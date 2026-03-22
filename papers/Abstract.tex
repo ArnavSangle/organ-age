@@ -1,0 +1,44 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\title{Organ-Age: A Multimodal Fusion of Transcriptomic and Radiological Signals for Organ-Resolved Biological Age Estimation}
+\author{
+  Arnav Sangle \\
+  Independent Researcher, Ranchview High School, Irving TX, USA \\
+  \texttt{arnavsangle08@gmail.com}
+}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Biological aging does not proceed uniformly across the body. Different organs accumulate
+molecular, structural, and physiological damage at different rates, yet most biological age
+predictors rely on a single data type and consequently collapse aging into a single,
+organism-wide estimate. This compression limits clinical interpretability and obscures organ-level
+trajectories that span both gene regulation and tissue morphology.
+
+Here I present Organ-Age, a framework that estimates organ-resolved biological age by fusing
+transcriptomic and radiological signals. Using bulk RNA-seq from GTEx, chest radiographs from
+CheXpert, and structural brain MRI from IXI, the model first encodes each modality into a
+fixed-length embedding, aligns embeddings into a shared latent space via an InfoNCE-style
+contrastive objective, and then merges them through a transformer-based fusion module to
+produce organ-level age predictions with uncertainty. On a combined cohort of over 190,000
+samples, the aligned multimodal model achieves a mean absolute error of $\sim$9.3 years and
+tracks chronological age closely across the adult lifespan.
+
+Residual deviations between predicted organ age and chronological age---organ-age deltas---expose
+structured acceleration and deceleration patterns that differ by organ and are consistent with
+known tissue-level biology. These findings suggest that biological age is better modeled as a
+multi-signal, organ-resolved construct than as a single number and that alignment plus attention-based
+fusion is a viable route toward interpretable organ-specific aging assessment.
+\end{abstract}
+
+\vspace{1em}
+\noindent\textbf{Keywords:} biological age, organ aging, multimodal learning, contrastive alignment, transcriptomics, fusion transformer, interpretability
+
+\end{document}

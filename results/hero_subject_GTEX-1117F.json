@@ -1,0 +1,65 @@
+{
+  "subject_id": "GTEX-1117F",
+  "chrono_age": 64.5,
+  "organs": {
+    "adipose": {
+      "age_pred": 52.54,
+      "delta": -11.96,
+      "zscore": -0.928,
+      "ci_lower": 24.5,
+      "ci_upper": 64.99,
+      "ci_width": 40.49
+    },
+    "brain_cortex": {
+      "age_pred": 58.82,
+      "delta": -5.68,
+      "zscore": -0.559,
+      "ci_lower": 37.04,
+      "ci_upper": 74.5,
+      "ci_width": 37.46
+    },
+    "heart": {
+      "age_pred": 54.22,
+      "delta": -10.28,
+      "zscore": -0.947,
+      "ci_lower": 32.75,
+      "ci_upper": 64.5,
+      "ci_width": 31.75
+    },
+    "kidney": {
+      "age_pred": 56.22,
+      "delta": -8.28,
+      "zscore": -0.802,
+      "ci_lower": 34.5,
+      "ci_upper": 71.7,
+      "ci_width": 37.2
+    },
+    "skeletal_muscle": {
+      "age_pred": 50.4,
+      "delta": -14.1,
+      "zscore": -1.091,
+      "ci_lower": 21.79,
+      "ci_upper": 64.5,
+      "ci_width": 42.71
+    },
+    "skin": {
+      "age_pred": 52.78,
+      "delta": -11.72,
+      "zscore": -0.898,
+      "ci_lower": 24.5,
+      "ci_upper": 64.5,
+      "ci_width": 40.0
+    },
+    "whole_blood": {
+      "age_pred": 53.02,
+      "delta": -11.48,
+      "zscore": -0.886,
+      "ci_lower": 24.5,
+      "ci_upper": 66.76,
+      "ci_width": 42.26
+    }
+  },
+  "mean_delta": -10.5,
+  "largest_abs_delta_organ": "skeletal_muscle",
+  "narrowest_ci_organ": "heart"
+}
