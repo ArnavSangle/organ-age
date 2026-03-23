@@ -100,3 +100,13 @@ The pipeline runs 9 stages: unimodal encoder training, contrastive alignment, cr
 | v4.5 | `vitalis_organage` | Production model with explainability |
 
 Superseded versions are archived in `archive_unused/`.
+
+## Citation
+
+If you use this work, please cite:
+
+```
+Sangle, A. (2026). Organ-Age: A Multimodal Fusion of Transcriptomic and Radiological Signals
+for Organ-Resolved Biological Age Estimation. Zenodo.
+https://doi.org/10.5281/zenodo.19197649
+```
